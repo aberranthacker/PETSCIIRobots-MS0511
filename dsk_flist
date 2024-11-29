@@ -1,0 +1,3 @@
+build/bootsector.bin
+build/ppu_module.bin
+build/bootstrap.bin
