@@ -6,7 +6,15 @@ compatible microcomputer [Elektronika MS 0511](https://en.wikipedia.org/wiki/UKN
 The port is in early stage of development.
 
 # Credits
-- David Murray - creator of PETSCII Robots
+- David Murray - creator of the PETSCII Robots
 - Noelle Amelie Aman - all music
 - Jim Wright - MS-DOS port
-- Oleg Tsymbalyuk - this port
+- Oleg Tsymbalyuk - Elektronika MS 0511 port
+
+# Software used
+- `as` ([patched](https://gist.github.com/aberranthacker/f0d26b92fbf07617d4bd2764abd66c23)) and `ld` from GNU Binutils 2.39 
+- GNU Make
+- Ruby 3.3
+- [Neovim](https://neovim.io/) with [tree-sitter-vm2](https://github.com/aberranthacker/tree-sitter-vm2)
+parser for [nvim-treesitter](https://github.com/nvim-treesitter/nvim-treesitter)
+- [ukncbtl-qt](https://github.com/nzeemin/ukncbtl-qt)
