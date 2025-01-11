@@ -49,11 +49,11 @@ start:
 
         call Puts
 
-        MTPS #PR0
+        MOV #VblankIntHandler, @#0100
 
-        MOV #KeyboardIntHadler,@#KBINT
+        MOV #keyboardIntHadler,@#KBINT
+
         MOV #PCH0II, R0
-
         MOV #Channel0In_IntHandler, (R0)+
         MOV #0200, (R0)
       ; read from the channel, just in case
@@ -82,7 +82,7 @@ start:
         TST @#Trap4Detected
         BZE AberrantSoundModulePresent
 
-        MOV #PSG_STUB, R1
+        MOV #STUB_REGISTER, R1
         MOV R1, R2
 
     AberrantSoundModulePresent:
@@ -94,42 +94,36 @@ start:
 
         MOV @#023166, rseed1 ; set cursor presence counter value as random seed
 
-        call ssy_init
-        call ssy_music_play
-
-        MOV #VblankIntHandler, @#0100
+        MTPS #PR0
 
       ; inform loader that PPU is ready to receive commands
         MOV #CPU_PPUCommandArg, @#PBPADR
         CLR @#PBP12D
 
-        MOV #CommandsQueue_CurrentPosition, R4
-        MTPS #PR0
 ;-------------------------------------------------------------------------------
 Queue_Loop:
-        MOV (R4), R5
+        MOV @#CommandsQueue_CurrentPosition, R5
         CMP R5, #CommandsQueue_Bottom
         BEQ Queue_Loop
 
         MTPS #PR7
         MOV (R5)+, R1
         MOV (R5)+, R0
-        MOV R5, (R4)
+        MOV R5, @#CommandsQueue_CurrentPosition
         MTPS #PR0
     .ifdef DEBUG
         CMP R1, #PPU.LastJMPTableIndex
         BHI .
     .endif
         CALL @CommandsVectors(R1)
-        MOV #CommandsQueue_CurrentPosition, R4
         BR Queue_Loop
 ;-------------------------------------------------------------------------------
 CommandsVectors:
-        .word LoadDiskFile
+        .word loadDiskFile
         .word SetPalette            ; PPU.SetPalette
         .word ClearScreen           ; PPU.ClearScreen
-        .word test_timer
         .word ssy_music_play
+        .word test_timer
 ;-------------------------------------------------------------------------------
 ClearAuxScreen: ;------------------------------------------------------------{{{
     .if AUX_SCREEN_LINES_COUNT != 0
@@ -155,7 +149,7 @@ ClearScreen: ;---------------------------------------------------------------{{{
         MOV #MAIN_SCREEN_LINES_COUNT * (4/LINE_SCALE), R1
         MOV #DTSOCT,R4
         MOV #PBPADR,R5
-        MOV #FB0/2,(R5)
+        MOV #FB / 2,(R5)
         CLR @#PBPMSK ; write to all bit-planes
         CLR @#BP01BC ; background color, pixels 0-3
         CLR @#BP12BC ; background color, pixels 4-7
@@ -171,7 +165,7 @@ ClearScreen: ;---------------------------------------------------------------{{{
 ;----------------------------------------------------------------------------}}}
     .ifdef INCLUDE_AKG_PLAYER ;----------------------------------------------{{{
     .endif ;-----------------------------------------------------------------}}}
-LoadDiskFile: ; -------------------------------------------------------------{{{
+loadDiskFile: ; -------------------------------------------------------------{{{
         MOV #VblankIntHandler.Minimal, @#0100
 
         MOV R0, @#023200 ; set ParamsStruct address for firmware proc to use
@@ -184,7 +178,7 @@ LoadDiskFile: ; -------------------------------------------------------------{{{
         MOV #VblankIntHandler, @#0100
         RETURN
 ;----------------------------------------------------------------------------}}}
-test_timer: ; -------------------------------------------------------------{{{
+test_timer: ; ---------------------------------------------------------------{{{
         mov #3434, @#TMRBUF
         mov #timer_sub, @#TMRINT
         ;      76543210
@@ -224,13 +218,8 @@ SubroutineStub:
         .include "ppu/puts.s"
         .include "audio.s"
 
-        ; .incbin "resources/petfont.gfx"
+        .incbin "resources/petfont.gfx"
         .even
-
-    .ifdef INCLUDE_AKG_PLAYER
-        .include "akg_player.s"
-        .include "player_sound_effects.s"
-    .endif
 
 CommandsQueue_Top:
         .ds 2*16

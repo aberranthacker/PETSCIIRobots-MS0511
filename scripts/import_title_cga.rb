@@ -5,8 +5,6 @@ src = File.binread('../MS-DOS-Robots-05-22-2023/Robots/title.cga')
 dst = []
 even_lines = src[0...8000]
 odd_lines = src[8_192...16_192]
-puts even_lines.size
-puts odd_lines.size
 src = []
 
 0.upto(99) do |i|

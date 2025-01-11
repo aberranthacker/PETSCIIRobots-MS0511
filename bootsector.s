@@ -5,7 +5,7 @@
                 .include "macros.s"
                 .include "defs.s"
 
-                .global LoadDiskFile
+                .global loadDiskFile
                 .global PS.Status
                 .global PS.Command
                 .global PS.DeviceType
@@ -14,7 +14,7 @@
                 .global PS.CPU_RAM_Address
                 .global PS.WordsCount
 
-                .global bootstrap.bin
+                .global main.bin
 
         .=0
  0$:    nop     ; Bootable disk marker, will be replaced with RTI down below
@@ -59,7 +59,7 @@ ParamsStruct:
         .=0104  ; 68
       ; in: r0 - params struct address
       ; corruppts: r0, r1
-LoadDiskFile:
+loadDiskFile:
         mov (r0)+, PS.CPU_RAM_Address
         mov (r0)+, PS.WordsCount
         mov (r0), r1 ; starting block number
@@ -79,14 +79,13 @@ LoadDiskFile:
         rorb PS.DeviceNumber ; push in bit 7, new head number
 
         movb #-1, PS.Status
-        _ppu_enqueue_ensure PPU.LoadDiskFile, ParamsStruct
+        _ppu_enqueue_ensure PPU.loadDiskFile, ParamsStruct
 
         10$:
             tstb PS.Status
         bmi 10$
 
         return
-        .=0216  ; 140 0x8E
 ;-------------------------------------------------------------------------------
 ; The code below will be used only once to load, install, and execute PPU module,
 ; as well as to load and execute loader.
@@ -130,9 +129,9 @@ LoadPPUModule:
             tst @#PPUCommandArg
         bnz WaitUntilPPUInitializes
       ;-------------------------------------------------------------------------
-        mov #bootstrap.bin, r0
-        call LoadDiskFile
-        jmp @#LOADER_START
+        mov #main.bin, r0
+        call loadDiskFile
+        jmp @#MAIN_START
 ;-------------------------------------------------------------------------------
 Channel2Send:
         mov #ParamsAddr, r0 ; r0 - pointer to channel's init sequence array
@@ -162,10 +161,9 @@ PPUModule_PS:
     PPUModule_PS.A2:      .word PPU_UserRamSizeWords ; Argument 2
     PPUModule_PS.A3:      .word 0   ; Argument 3
 ;-------------------------------------------------------------------------------
-bootstrap.bin:
-        .word LOADER_START
+main.bin:
+        .word MAIN_START
         .word 0
         .word 0
 ;-------------------------------------------------------------------------------
 TitleStr: .asciz "\"Attack of the PETSCII Robots\" is loading..."
-

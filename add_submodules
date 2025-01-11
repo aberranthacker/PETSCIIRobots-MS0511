@@ -1,0 +1,4 @@
+#!/bin/sh
+
+git submodule add git@github.com:aberranthacker/ms0511-build-tools.git tools
+git submodule add git@github.com:aberranthacker/ms0511-common.git common

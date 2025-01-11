@@ -1,3 +1,4 @@
+.include "keyboard_defs.s"
 ;===============================================================================
 ;--- Note that the PRESENCE of those variables is tested, NOT their values. ----
 .equiv DEBUG, 1
@@ -7,17 +8,18 @@
     .equiv DETECT_ABERRANT_SOUND_MODULE, 1
 .endif
 ;.equiv DOUBLED_LINES, 1
+; .equiv PREVENT_SIGN_EXTENSION, 1
 ;===============================================================================
-.equiv PPU.LoadDiskFile,      0*2
+.equiv PPU.loadDiskFile,      0*2
 .equiv PPU.SetPalette,        1*2
 .equiv PPU.ClearScreen,       2*2
-.equiv PPU.test_timer,        3*2
-.equiv PPU.ssy_music_play,    4*2
+.equiv PPU.ssy_music_play,    3*2
+.equiv PPU.test_timer,        4*2
 
 .equiv PPU.LastJMPTableIndex, 4*2
 
-.equiv PPU.SET_FB0_VISIBLE, 0
-.equiv PPU.SET_FB1_VISIBLE, 1
+; .equiv PPU.SET_FB0_VISIBLE, 0
+; .equiv PPU.SET_FB1_VISIBLE, 1
 ;-------------------------------------------------------------------------------
 .equiv ExtMemSizeBytes, 7168
 ;-------------------------------------------------------------------------------
@@ -32,21 +34,28 @@
 .equiv LINE_WIDTHW, LINE_WIDTHB / 2
 .equiv FB_SIZEB, MAIN_SCREEN_LINES_COUNT * LINE_WIDTHB
 .equiv FB_SIZEW, MAIN_SCREEN_LINES_COUNT * LINE_WIDTHW
+
 ; CPU memory map ---------------------------------------------------------------
 .equiv INTERRUPT_HANDLER_STUB, 0  ; installed by bootsector
 .equiv SAVED_SP, 2                ; place to store SP if needed
 .equiv PPUCommandArg, 052 ; 38 0x26 command for PPU argument
 .equiv CPU_PPUCommandArg, PPUCommandArg/2
-.equiv KeyboardScanner, 054
-.equiv PPU_KeyboardScanner, KeyboardScanner/2
+.equiv KEYBOARD_SCANNER, 054
+.equiv PPU_KeyboardScanner, KEYBOARD_SCANNER/2
 
-.equiv FB0, 0600 ; 0384 0x0180
-.equiv FB_GAP, FB0 + LINE_WIDTHB * MAIN_SCREEN_LINES_COUNT
-.equiv FB1, FB_GAP+384
+.equiv FB, 0600 ; 0384 0x0180
+.equiv FB_END, FB + LINE_WIDTHB * MAIN_SCREEN_LINES_COUNT
+
+.equiv PPU_MODULE_LOADING_ADDR, FB_END
+.equiv LEVEL_MAP, FB_END
+.equiv TITLE_START, LEVEL_MAP
+
+.equiv LEVEL_MAP_SIZE, 8960
+
+.equiv LEVEL_MAP_END, LEVEL_MAP + LEVEL_MAP_SIZE
+.equiv MAIN_START, LEVEL_MAP_END ; 56320 0xDC00
 
 .equiv INITIAL_SP, 0160000
-.equiv PPU_MODULE_LOADING_ADDR, FB1
-.equiv LOADER_START, FB1
 ; 0160000 57344 0xE000 end of RAM ----------------------------------------------
 
 .equiv PPU_UserRamSize, 0054104 ; 22596 0x5844
@@ -150,14 +159,7 @@
 .equiv DECB_R3_OPCODE, 0105303
 .equiv MOVB_R3_R3_OPCODE, 0110303
 
-; Player_driver uses ROLB to check which keys were pressed.
-; So if you change keymap here, modify player_driver code as well.
-.equiv KEYMAP_PAUSE, 0x80
-.equiv KEYMAP_F2,    0x40
-.equiv KEYMAP_F1,    0x20
-.equiv KEYMAP_LEFT,  0x10
-.equiv KEYMAP_RIGHT, 0x08
-.equiv KEYMAP_UP,    0x04
-.equiv KEYMAP_DOWN,  0x02
-.equiv KEYMAP_F3,    0x01
-.equiv KEYMAP_ANY_FIRE, 0b01100001
+.equiv KEYMAP_RIGHT,  0x08
+.equiv KEYMAP_LEFT,   0x04
+.equiv KEYMAP_DOWN,   0x02
+.equiv KEYMAP_UP,     0x01
