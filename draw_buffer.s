@@ -26,24 +26,30 @@
 .equiv DRAW_CHAR_REPS, 2 ; 2 is max number, `sob` will be out of range otherwise
 
 drawBuffer:
-    mov #TEXT_BUFFER, r1
-    mov #TEXT_BUFFER_PREV, r2
-    mov #FB, r5
-    mov #25, LINES_COUNT
-    mov #LINE_WIDTHB, r3
-    mov #LINE_WIDTHW / DRAW_CHAR_REPS, r4
-
-    drawBuffer.loop:
-            .rept DRAW_CHAR_REPS
-                _drawChar
-            .endr
-        sob r4, drawBuffer.loop
-
-        add #LINE_WIDTHB * 7, r5
-       .equiv LINES_COUNT, .+2
-        dec #25
-        bze 1237$
-
+    .ifdef PPU_DRAW
+        tstb @#CCH1OS
+        bpl .-4
+        movb #TRUE, @#CCH1OD
+    .else
+        mov #TEXT_BUFFER, r1
+        mov #TEXT_BUFFER_PREV, r2
+        mov #FB, r5
+        mov #25, LINES_COUNT
+        mov #LINE_WIDTHB, r3
         mov #LINE_WIDTHW / DRAW_CHAR_REPS, r4
-    jmp drawBuffer.loop
+
+        drawBuffer.loop:
+                .rept DRAW_CHAR_REPS
+                    _drawChar
+                .endr
+            sob r4, drawBuffer.loop
+
+            add #LINE_WIDTHB * 7, r5
+           .equiv LINES_COUNT, .+2
+            dec #25
+            bze 1237$
+
+            mov #LINE_WIDTHW / DRAW_CHAR_REPS, r4
+        jmp drawBuffer.loop
+    .endif
 1237$: return

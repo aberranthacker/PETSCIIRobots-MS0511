@@ -201,18 +201,16 @@ doorOpenA:
     bnz DOA1
 
   ; HORIZONTAL DOOR
-    mov #0x58, DOORPIECE1 ; 88
-    mov #0x59, DOORPIECE2 ; 89
-    mov #0x56, DOORPIECE3 ; 86
-    call drawHorizontalDoor
+    jsr r5, drawHorizontalDoor
+    .byte 0x58, 0x59, 0x56 ; 88, 89, 86 ; DOORPIECE1, DOORPIECE2, DOORPIECE3
+    .even
     br DOA2
 
     DOA1:
   ; VERTICAL DOOR
-    mov #0x46, DOORPIECE1 ; 70
-    mov #0x4A, DOORPIECE2 ; 74
-    mov #0x4E, DOORPIECE3 ; 78
-    call drawVerticalDoor
+    jsr r5, drawVerticalDoor
+    .byte 0x46, 0x4A, 0x4E ; 70, 74, 78 ; DOORPIECE1, DOORPIECE2, DOORPIECE3
+    .even
 
     DOA2:
     movb #1, UNIT_B(r3)
@@ -224,17 +222,15 @@ doorOpenB:
     tstb UNIT_A(r3)
     bnz DOB1
       ; HORIZONTAL DOOR
-        mov #0x11, DOORPIECE1 ; 17
-        mov #0x09, DOORPIECE2 ;  9
-        mov #0x5B, DOORPIECE3 ; 91
-        call drawHorizontalDoor
+        jsr r5, drawHorizontalDoor
+        .byte 0x11, 0x09, 0x5B ; 17, 9, 91 ; DOORPIECE1, DOORPIECE2, DOORPIECE3
+        .even
         br DOB2
     DOB1:
       ; VERTICAL DOOR
-        mov #0x1B, DOORPIECE1 ; 27
-        mov #0x09, DOORPIECE2 ;  9
-        mov #0x0F, DOORPIECE3 ; 15
-        call drawVerticalDoor
+        jsr r5, drawVerticalDoor
+        .byte 0x1B, 0x09, 0x0F ; 27, 9, 15 ; DOORPIECE1, DOORPIECE2, DOORPIECE3
+        .even
     DOB2:
     movb #2, UNIT_B(r3)
     movb #OPENED_DOOR_DELAY, UNIT_TIMER_A(r3)
@@ -249,9 +245,10 @@ doorOpenFull:
     DOF1:
   ; if nobody near door, lets close it.
   ; check for object in the way first.
-    movb UNIT_LOC_X(r3), MAP_X
-    movb UNIT_LOC_Y(r3), MAP_Y
+    movb UNIT_LOC_X(r3), r1
+    movb UNIT_LOC_Y(r3), r2
     call getTileFromMap
+
     cmpb r0, #TILE_FLOOR
     beq DOFB
       ; something in the way, abort
@@ -263,17 +260,15 @@ doorOpenFull:
     tstb UNIT_A(r3)
     bnz DOF2
       ; horizontal door
-        mov #0x58, DOORPIECE1 ; 88
-        mov #0x59, DOORPIECE2 ; 89
-        mov #0x56, DOORPIECE3 ; 86
-        call drawHorizontalDoor
+        jsr r5, drawHorizontalDoor
+        .byte 0x58, 0x59, 0x56 ; 88, 89, 86 ; DOORPIECE1, DOORPIECE2, DOORPIECE3
+        .even
         br DOF3
     DOF2:
       ; vertical door
-        mov #0x46, DOORPIECE1 ; 70
-        mov #0x4A, DOORPIECE2 ; 74
-        mov #0x4E, DOORPIECE3 ; 78
-        call drawVerticalDoor
+        jsr r5, drawVerticalDoor
+        .byte 0x46, 0x4A, 0x4E ; 70, 74, 78 ; DOORPIECE1, DOORPIECE2, DOORPIECE3
+        .even
     DOF3:
     movb #3, UNIT_B(r3)
     movb #DOOR_SPEED, UNIT_TIMER_A(r3)
@@ -283,18 +278,16 @@ doorOpenFull:
 doorCloseA:
     cmpb UNIT_A(r3), #1
     beq DCA2
-      ; HORIZONTAL DOOR
-        mov #0x54, DOORPIECE1 ; 84
-        mov #0x55, DOORPIECE2 ; 85
-        mov #0x56, DOORPIECE3 ; 86
-        call drawHorizontalDoor
+      ; horizontal door
+        jsr r5, drawHorizontalDoor
+        .byte 0x54, 0x55, 0x56 ; 84, 85, 86 ; DOORPIECE1, DOORPIECE2, DOORPIECE3
+        .even
         br DCA3
     DCA2:
-      ; VERTICAL DOOR
-        mov #0x45, DOORPIECE1 ; 69
-        mov #0x49, DOORPIECE2 ; 73
-        mov #0x4D, DOORPIECE3 ; 77
-        call drawVerticalDoor
+      ; vertical door
+        jsr r5, drawVerticalDoor
+        .byte 0x45, 0x49, 0x4D ; 69, 73, 77 ; DOORPIECE1, DOORPIECE2, DOORPIECE3
+        .even
     DCA3:
     movb #4, UNIT_B(r3)
     movb #DOOR_SPEED, UNIT_TIMER_A(r3)
@@ -305,17 +298,15 @@ doorCloseB:
     tstb UNIT_A(r3)
     bnz DCB2
       ; horizontal door
-        mov #0x50, DOORPIECE1 ; 80
-        mov #0x51, DOORPIECE2 ; 81
-        mov #0x52, DOORPIECE3 ; 82
-        call drawHorizontalDoor
+        jsr r5, drawHorizontalDoor
+        .byte 0x50, 0x51, 0x52 ; 80, 81, 82 ; DOORPIECE1, DOORPIECE2, DOORPIECE3
+        .even
         br DCB3
     DCB2:
       ; vertical door
-        mov #0x44, DOORPIECE1 ; 68
-        mov #0x48, DOORPIECE2 ; 72
-        mov #0x4C, DOORPIECE3 ; 76
-        call drawVerticalDoor
+        jsr r5, drawVerticalDoor
+        .byte 0x44, 0x48, 0x4C ; 68, 72, 76 ; DOORPIECE1, DOORPIECE2, DOORPIECE3
+        .even
     DCB3:
     movb #5, UNIT_B(r3)
     movb #DOOR_SPEED, UNIT_TIMER_A(r3)
@@ -358,17 +349,15 @@ doorCloseFull:
             tstb UNIT_A(r3)
             bnz 10$
               ; horizontal door
-                mov #0x54, DOORPIECE1 ; 84
-                mov #0x55, DOORPIECE2 ; 85
-                mov #0x56, DOORPIECE3 ; 86
-                call drawHorizontalDoor
+                jsr r5, drawHorizontalDoor
+                .byte 0x54, 0x55, 0x56 ; 84, 85, 86 ; DOORPIECE1, DOORPIECE2, DOORPIECE3
+                .even
                 br 20$
             10$:
               ; vertical door
-                mov #0x45, DOORPIECE1 ; 69
-                mov #0x49, DOORPIECE2 ; 73
-                mov #0x4D, DOORPIECE3 ; 77
-                call drawVerticalDoor
+                jsr r5, drawVerticalDoor
+                .byte 0x45, 0x49, 0x4D ; 69, 73, 77 ; DOORPIECE1, DOORPIECE2, DOORPIECE3
+                .even
             20$:
             clrb UNIT_B(r3)
             movb #DOOR_SPEED, UNIT_TIMER_A(r3)
@@ -388,41 +377,39 @@ plotTileToMap:
 return
 
 ;       in: r3 = door unit number
-; corrupts: r0, r5
+; corrupts: r0, r1, r2
 drawVerticalDoor:
     _movb UNIT_LOC_X(r3), r1
-    _movb UNIT_LOC_Y(r3),r2
+    _movb UNIT_LOC_Y(r3), r2
     dec r2
 
-    movb DOORPIECE1, r0
+    movb (r5)+, r0
     call plotTileToMap
 
     add #MAP_WIDTH, r2
-    movb DOORPIECE2, (r2)
+    movb (r5)+, (r2)
 
     add #MAP_WIDTH, r2
-    movb DOORPIECE3, (r2)
-return
+    movb (r5)+, (r2)
+    inc r5 ; adjust for .even
+rts r5
 
 ;       in: r3 = door unit number
-; corrupts: r0, r5
+; corrupts: r0, r1, r2
 drawHorizontalDoor:
     _movb UNIT_LOC_X(r3), r1
     dec r1
     _movb UNIT_LOC_Y(r3), r2
 
-    mov DOORPIECE1, r0
+    movb (r5)+, r0
     call plotTileToMap
 
     inc r2
-    movb DOORPIECE2, (r2)+
+    movb (r5)+, (r2)+
 
-    movb DOORPIECE3, (r2)
-return
-
-DOORPIECE1: .word 0
-DOORPIECE2: .word 0
-DOORPIECE3: .word 0
+    movb (r5)+, (r2)
+    inc r5 ; adjust for .even
+rts r5
 
 ;       in: r3 = door unit number
 ; corrupts: r0
@@ -470,70 +457,63 @@ trashCompactor:
                     jmp aiLoop       ; should never get here.
 
 tcOpenState:
-    movb UNIT_LOC_X(r3), MAP_X
-    movb UNIT_LOC_Y(r3), MAP_Y
+    _movb UNIT_LOC_X(r3), r1
+    _movb UNIT_LOC_Y(r3), r2
     call getTileFromMap
 
-    cmp r0, #TILE_TRASH_ZONE ; Usual tile for trash compactor danger zone
-    bne TRS15
+    cmpb r0, #TILE_TRASH_ZONE ; Usual tile for trash compactor danger zone
+    bne close_the_trash_compactor
+        cmpb 1(r5), #TILE_TRASH_ZONE ; Usual tile for trash compactor danger zone
+        bne close_the_trash_compactor
+            movb #20, UNIT_TIMER_A(r3)
+          ; now check for units in the compactor
+            call checkForUnit
+            bpl close_the_trash_compactor
+                jmp aiLoop ; Nothing found, do nothing.
+    close_the_trash_compactor:
+      ; Object has been detected in TC, start closing.
+        jsr r5, drawTrashCompactor
+       .byte 0x92, 0x93, 0x96, 0x97 ; 146, 147, 150, 151 ; TCPIECE1, TCPIECE2, TCPIECE3, TCPIECE4
 
-    inc MAP_ADDR
-    cmpb @MAP_ADDR, #TILE_TRASH_ZONE ; Usual tile for trash compactor danger zone
-    bne TRS15
-        movb #20, UNIT_TIMER_A(r3)
-      ; now check for units in the compactor
-        movb UNIT_LOC_X(r3), MAP_X
-        movb UNIT_LOC_Y(r3), MAP_Y
-        call checkForUnit
-        _jmp CC, aiLoop ; Nothing found, do nothing.
-    TRS15:
-  ; Object has been detected in TC, start closing.
-    mov #0x92, TCPIECE1 ; 146
-    mov #0x93, TCPIECE2 ; 147
-    mov #0x96, TCPIECE3 ; 150
-    mov #0x97, TCPIECE4 ; 151
-    call drawTrashCompactor
-
-    incb UNIT_A(r3)
-    movb #COMPACTOR_2ND_DELAY, UNIT_TIMER_A(r3)
-    ; mov #SND_TRASH_CLOSE, r0
-    ; call playSound
+        incb UNIT_A(r3)
+        movb #COMPACTOR_2ND_DELAY, UNIT_TIMER_A(r3)
+        ; mov #SND_TRASH_CLOSE, r0
+        ; call playSound
 jmp aiLoop
 
 
 tcMidClosing:
-    mov #0x98, TCPIECE1 ; 152
-    mov #0x99, TCPIECE2 ; 153
-    mov #0x9C, TCPIECE3 ; 156
-    mov #0x9D, TCPIECE4 ; 157
-    call drawTrashCompactor
+    jsr r5, drawTrashCompactor
+   .byte 0x98, 0x99, 0x9C, 0x9D ; 152, 153, 156, 157 ; TCPIECE1, TCPIECE2, TCPIECE3, TCPIECE4
 
     incb UNIT_A(r3)
     movb #COMPACTOR_3RD_DELAY, UNIT_TIMER_A(r3)
 
   ; Now check for any live units in the compactor
-    movb UNIT_LOC_X(r3), MAP_X
-    movb UNIT_LOC_Y(r3), MAP_Y
+    movb UNIT_LOC_X(r3), r1 ; MAP_X
+    movb UNIT_LOC_Y(r3), r2 ; MAP_Y
     call checkForUnit
     bpl tcmc.killUnit
-        inc MAP_X ; check second tile
+        inc r1 ; MAP_X ; check second tile
         call checkForUnit
         _jmp MI, aiLoop
 
     tcmc.killUnit:
   ; Found unit in compactor, kill it.
-    mov #MSG_TERMINATED, r5
-    call printInfo
+    push r4 ; store unit idx for later
+        mov #MSG_TERMINATED, r5
+        call printInfo
 
-    ; mov #SND_EXPLOSION, r0 ; EXPLOSION sound
-    ; call playSound
-    mov UNIT_FIND, r0
-    clrb UNIT_TYPE(r0)
-    clrb UNIT_HEALTH(r0)
+        ; mov #SND_EXPLOSION, r0 ; EXPLOSION sound
+        ; call playSound
+        ; mov UNIT_FIND, r0
+    pop r4 ; restore unit idx
+    clrb UNIT_TYPE(r4)
+    clrb UNIT_HEALTH(r4)
 
     mov #28, r1 ; start of weapons
     TCMC2:
-        tstb UNIT_TYPE(r0)
+        tstb UNIT_TYPE(r4)
         bze TCMC3
 
         inc r1
@@ -547,7 +527,7 @@ tcMidClosing:
     movb UNIT_LOC_X(r3), UNIT_LOC_X(r1)
     movb UNIT_LOC_Y(r3), UNIT_LOC_Y(r1)
 
-    tstb UNIT_FIND ; is it the player?
+    tstb r4 ; UNIT_FIND ; is it the player?
     bnz TCMC4
         call displayPlayerHealth
         ; mov #SND_PLAYER_DOWN, r0
@@ -558,22 +538,16 @@ tcMidClosing:
         jmp ailpCheckForWindowRedraw
 
 tcClosedState:
-    mov #0x92, TCPIECE1 ; 146
-    mov #0x93, TCPIECE2 ; 147
-    mov #0x96, TCPIECE3 ; 150
-    mov #0x97, TCPIECE4 ; 151
-    call drawTrashCompactor
+    jsr r5, drawTrashCompactor
+   .byte 0x92, 0x93, 0x96, 0x97 ; 146, 147, 150, 151 ; TCPIECE1, TCPIECE2, TCPIECE3, TCPIECE4
 
     incb UNIT_A(r3)
     movb #COMPACTOR_2ND_DELAY, UNIT_TIMER_A(r3)
     jmp aiLoop
 
 tcMidOpening:
-    mov #0x90, TCPIECE1 ; 144
-    mov #0x91, TCPIECE2 ; 145
-    mov #0x94, TCPIECE3 ; 148
-    mov #0x94, TCPIECE4 ; 148
-    call drawTrashCompactor
+    jsr r5, drawTrashCompactor
+   .byte 0x90, 0x91, 0x94, 0x94 ; 144, 145, 148, 148 ; TCPIECE1, TCPIECE2, TCPIECE3, TCPIECE4
 
     clrb UNIT_A(r3)
     movb #COMPACTOR_COOLDOWN, UNIT_TIMER_A(r3)
@@ -586,20 +560,16 @@ drawTrashCompactor:
     _movb UNIT_LOC_X(r3), r1
     _movb UNIT_LOC_Y(r3), r2
     dec r2 ; start one tile above
-    mov TCPIECE1, r0
+    movb (r5)+, r0
     call plotTileToMap
 
     inc r2
-    movb TCPIECE2, (r2)
+    movb (r5)+, (r2)
 
     add #MAP_WIDTH - 1, r2
-    movb TCPIECE3, (r2)+
+    movb (r5)+, (r2)+
 
-    movb TCPIECE4, (r2)
+    movb (r5)+, (r2)
 
-    jmp checkForWindowRedraw ; call:return
-
-TCPIECE1: .word 0
-TCPIECE2: .word 0
-TCPIECE3: .word 0
-TCPIECE4: .word 0
+    call checkForWindowRedraw
+rts r5

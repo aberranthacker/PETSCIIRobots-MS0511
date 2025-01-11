@@ -9,6 +9,7 @@
                 .include "macros.s"
                 .include "hwdefs.s"
                 .include "defs.s"
+                .include "constants.s"
 
                 .equiv PPU_ModuleSize, (end - start)
                 .equiv PPU_ModuleSizeWords, PPU_ModuleSize/2
@@ -218,7 +219,6 @@ SubroutineStub:
         .include "ppu/puts.s"
         .include "audio.s"
 
-        .incbin "resources/petfont.gfx"
         .even
 
 CommandsQueue_Top:

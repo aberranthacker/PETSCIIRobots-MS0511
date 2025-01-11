@@ -63,7 +63,6 @@ dsk/robots.dsk : $(BUILD_DSK) \
 		 build/bootsector.bin \
 		 build/ppu_module.bin \
 		 build/main.bin \
-		 build/title.bin \
 		 resources/level_a \
 		 resources/level_b \
 		 resources/level_c \
@@ -100,8 +99,8 @@ build/bootsector.o : $(COMMON) \
 # bootsector.bin ------------------------------------------------------------}}}
 
 # ppu_module.bin ------------------------------------------------------------{{{
-build/ppu_module.bin : build/ppu.o
-	$(LD) $(LDFLAGS) -T linker_scripts/ppu.ld -R build/title.o
+build/ppu_module.bin : build/ppu.o build/main.o
+	$(LD) $(LDFLAGS) -T linker_scripts/ppu.ld -R build/main.o
 	ruby $(AOUT2SAV) build/ppu.out -b -s -o build/ppu_module.bin
 build/ppu.o : $(COMMON) \
               ppu.s \

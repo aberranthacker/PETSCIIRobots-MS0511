@@ -25,6 +25,8 @@
        .global level_o
        .global start
 
+       .global TEXT_BUFFER
+
        .global puts
        .global DIFFICULTY
        .global unZX0
@@ -100,7 +102,6 @@ start:
     checkKbdUp:
         bit #KEYMAP_UP, KEYBOARD_SCANNER
         bze checkKbdDown
-        ;:bpt
             clr r3 ; player unit number is 0
             mov #MOVE_WALK, MOVE_TYPE
             call requestWalkUp
@@ -308,14 +309,13 @@ return
 
 ; in: r3 = unit number
 requestWalkUp:
-    movb UNIT_LOC_Y(r3), r0
-    cmpb r0, #3
+    movb UNIT_LOC_Y(r3), r2
+    cmpb r2, #3
     beq moveNotAllowed
 
-    mov r0, MAP_Y
-    dec MAP_Y
+    dec r2
 
-    movb UNIT_LOC_X(r3), MAP_X
+    movb UNIT_LOC_X(r3), r1
     call getTileFromMap
   ; r0 now contains tile idx
     bitb MOVE_TYPE, TILE_ATTRIB(r0)
@@ -330,14 +330,13 @@ return
 
 ; in: r3 = unit number
 requestWalkDown:
-    movb UNIT_LOC_Y(r3), r0
-    cmpb r0, #62
+    movb UNIT_LOC_Y(r3), r2
+    cmpb r2, #62
     bhis moveNotAllowed
 
-    mov r0, MAP_Y
-    inc MAP_Y
+    inc r2
 
-    movb UNIT_LOC_X(r3), MAP_X
+    movb UNIT_LOC_X(r3), r1
     call getTileFromMap
   ; r0 now contains tile idx
     bitb MOVE_TYPE, TILE_ATTRIB(r0)
@@ -357,14 +356,13 @@ return
 
 ; in: r3 = unit number
 requestWalkLeft:
-    movb UNIT_LOC_X(r3), r0
+    movb UNIT_LOC_X(r3), r1
     cmpb r0, #5
     beq moveNotAllowed
 
-    mov r0, MAP_X
-    dec MAP_X
+    dec r1
 
-    movb UNIT_LOC_Y(r3), MAP_Y
+    movb UNIT_LOC_Y(r3), r2
     call getTileFromMap
   ; r0 now contains tile idx
     bitb MOVE_TYPE, TILE_ATTRIB(r0)
@@ -379,14 +377,13 @@ return
 
 ; in: r3 = unit number
 requestWalkRight:
-    movb UNIT_LOC_X(r3), r0
-    cmpb r0, #122
+    movb UNIT_LOC_X(r3), r1
+    cmpb r1, #122
     beq moveNotAllowed
 
-    mov r0, MAP_X
-    inc MAP_X
+    inc r1
 
-    movb UNIT_LOC_Y(r3), MAP_Y
+    movb UNIT_LOC_Y(r3), r2
     call getTileFromMap
   ; r0 now contains tile idx
     bitb MOVE_TYPE, TILE_ATTRIB(r0)
@@ -442,8 +439,12 @@ jmp mainGameLoop            ; jp MAIN_GAME_LOOP
 ; This routine checks a specific place on the map specified
 ; in MAP_X and MAP_Y to see if there is a unit present at that spot.
 ; If so, the unit# will be stored in UNIT_FIND otherwise 255 will be stored.
+;  in: r1 = X
+;      r2 = Y
+;      r3 - can't be corrupted
+; out: r4 = unit idx
 checkForUnit:
-    mov #28, r1
+    mov #28, r0
     clr r4
     mov #UNIT_TYPE, r5
     cfu.unitsLoop:
@@ -451,35 +452,38 @@ checkForUnit:
         bnz cfu.compareCoordinates
     cfu.nextUnit:
         inc r4
-    sob r1, cfu.unitsLoop
+    sob r0, cfu.unitsLoop
 
-    mov #-1, UNIT_FIND
+    mov #-1, r4
 return
 
     cfu.compareCoordinates:
-        cmpb UNIT_LOC_X(r4), MAP_X
+        cmpb UNIT_LOC_X(r4), r1
         bne cfu.nextUnit
 
-        cmpb UNIT_LOC_Y(r4), MAP_Y
+        cmpb UNIT_LOC_Y(r4), r2
         bne cfu.nextUnit
 
-        mov r4, UNIT_FIND
+        tst r4
     return
 
 ; This routine will return the tile for a specific X/Y on the map.
 ; You must first define MAP_X and MAP_Y.
 ; The result is stored in TILE.
+
+; in: r1 = X
+;     r2 = Y
+; out: r0 = TILE
+;      r5 = MAP_ADDR
 getTileFromMap: ; TODO: use registers to provide MAP_Y, MAP_X, and return TILE and MAP_ADDR
-    mov MAP_Y, r1
-    swab r1
-    asr r1
-    bisb MAP_X, r1
+    mov r2, r5
+    swab r5
+    asr r5
+    bisb r1, r5
   ; r1 = MAP_Y * 128 + MAP_X
-    add #MAP, r1
-    mov r1, MAP_ADDR
+    add #MAP, r5
     clr r0
-    bisb (r1), r0
-    mov r0, TILE
+    bisb (r5), r0
 return
 
 LOAD_MSG2:       .ascii "LOADING: "
