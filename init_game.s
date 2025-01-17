@@ -7,10 +7,10 @@ initGame:
 
 resetKeysAmmo:
     movb #0b111, KEYS ; clr KEYS
-    mov #129, AMMO_PISTOL
-    clr AMMO_PISTOL
-    mov #512, AMMO_PLASMA
-    ; clr AMMO_PLASMA
+    mov #329, AMMO_PISTOL
+    ; clr AMMO_PISTOL
+    ; mov #512, AMMO_PLASMA
+    clr AMMO_PLASMA
     clr INV_BOMBS
     clr INV_EMP
     clr INV_MEDKIT

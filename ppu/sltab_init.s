@@ -104,6 +104,9 @@ bits 2,1,0
 -----------------------------------------------------------------------------}}}
 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 SLTABInit:
+        push @#PASWCR
+        MOV #0x0F0, @#PASWCR
+
         MOV #SLTAB, R0      ; set R0 to beginning of SLTAB
         MOV R0,R1           ; R0 address of current record (2)
 
@@ -176,8 +179,13 @@ SLTABInit:
 
         3$:
         .ifdef DEBUG
-            MOV #0x5500,(R0)+ ;  colors  011  010  001  000 (YRGB)
-            MOV #0xFFDD,(R0)+ ;  colors  111  110  101  100 (YRGB)
+            .ifdef COLOR_TILES
+                MOV #0xCA90,(R0)+ ;  colors  011  010  001  000 (YRGB)
+                MOV #0xFD7E,(R0)+ ;  colors  111  110  101  100 (YRGB)
+            .else
+                MOV #0x5500,(R0)+ ;  colors  011  010  001  000 (YRGB)
+                MOV #0xFFDD,(R0)+ ;  colors  111  110  101  100 (YRGB)
+            .endif
         .else
             MOV #0x0000,(R0)+ ;  colors  011  010  001  000 (YRGB)
             MOV #0x0000,(R0)+ ;  colors  111  110  101  100 (YRGB)
@@ -226,3 +234,4 @@ SLTABInit:
         CLR (R0)+           ;--address of line 308
         MOV R1,(R0)+        ;--pointer back to record 308
 ;-------------------------------------------------------------------------------
+        pop @#PASWCR

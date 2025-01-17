@@ -62,7 +62,11 @@ displayPistol:
     mov AMMO_PISTOL, r1
 
 displayWeaponAmount:
-    mov #TEXT_BUFFER+OFFS_DISPLAY_WEAPON+(SCREEN_WIDTH*4)+3, r5
+    .ifdef COLOR_TILES
+        mov #TEXT_BUFFER+(OFFS_DISPLAY_WEAPON+(SCREEN_WIDTH*4)+3)*2, r5
+    .else
+        mov #TEXT_BUFFER+OFFS_DISPLAY_WEAPON+(SCREEN_WIDTH*4)+3, r5
+    .endif
     jmp displayDecimalNumber
 
 displayBlankWeapon:
@@ -76,7 +80,11 @@ displayIconItem:
     br displayIcon
 
 displayIconWeapon:
-    mov #TEXT_BUFFER+OFFS_DISPLAY_WEAPON, r5
+    .ifdef COLOR_TILES
+        mov #TEXT_BUFFER+OFFS_DISPLAY_WEAPON*2, r5
+    .else
+        mov #TEXT_BUFFER+OFFS_DISPLAY_WEAPON, r5
+    .endif
 
 displayIcon:
     mov #4, r1
@@ -84,11 +92,27 @@ displayIcon:
         mov (r4)+, (r5)+
         mov (r4)+, (r5)+
         mov (r4)+, (r5)+
-        add #SCREEN_WIDTH-6, r5
+        .ifdef COLOR_TILES
+            mov (r4)+, (r5)+
+            mov (r4)+, (r5)+
+            mov (r4)+, (r5)+
+            add #(SCREEN_WIDTH-6)*2, r5
+        .else
+            add #SCREEN_WIDTH-6, r5
+        .endif
     sob r1, 10$
 
-    mov #0x2020, r0
-    mov r0, (r5)+
-    mov r0, (r5)+
-    mov r0, (r5)+
+    .ifdef COLOR_TILES
+        mov #0x2000, r0
+        .rept 6
+            mov r0, (r5)+
+            mov r0, (r5)+
+            mov r0, (r5)+
+        .endr
+    .else
+        mov #0x2020, r0
+        mov r0, (r5)+
+        mov r0, (r5)+
+        mov r0, (r5)+
+    .endif
 return

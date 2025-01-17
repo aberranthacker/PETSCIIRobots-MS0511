@@ -1,7 +1,6 @@
 build/bootsector.bin
 build/ppu_module.bin
 build/main.bin
-build/title.bin
 resources/level_a
 resources/level_b
 resources/level_c

@@ -1,4 +1,4 @@
-SetPalette:
+setPalette:
         PUSH @#PASWCR
         MOV  #0x040, @#PASWCR
         MOV  #PBPADR, R4

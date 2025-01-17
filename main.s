@@ -40,14 +40,14 @@ start:
   ; Main game loop starts here
     mov #SYSRQ, @#0100
     mtps #PR0
-    call initGame
+
+    call initGame ; reset vars and load map file
     call setDiffLevel
     call animatePlayer
     call calculateAndRedraw
-    call drawMapWindow
-    call displayPlayerHealth
-    call displayKeys
     call displayWeapon
+    call displayKeys
+    call displayPlayerHealth
 
     call drawMapWindow
 
@@ -81,6 +81,7 @@ start:
        .equiv reset_step, .+2
         tst #0                  ; and a
         bze checkKbd            ; jr z, CHECK_KBD
+        br checkKbd
                                 ; dec a
         dec reset_step          ; ld (reset_step), a
         bnz checkKbd            ; jr nz, CHECK_KBD
@@ -95,45 +96,49 @@ start:
                                 ; ld hl, reset_step
         mov #20, reset_step     ; ld (hl), 20
 
-        mov #5, KEYTIMER        ; ld hl, KEYTIMER
+        tst KEYTIMER
+        bnz mainGameLoop
+        mov #6, KEYTIMER        ; ld hl, KEYTIMER
                                 ; ld (hl), 5
 
                                 ; ld hl, TECLADO ; redefined keys
+        mov KEYBOARD_SCANNER, r0
     checkKbdUp:
-        bit #KEYMAP_UP, KEYBOARD_SCANNER
+        bit #KEYMAP_UP, r0
         bze checkKbdDown
             clr r3 ; player unit number is 0
             mov #MOVE_WALK, MOVE_TYPE
             call requestWalkUp
             jmp afterMove
     checkKbdDown:
-        bit #KEYMAP_DOWN, KEYBOARD_SCANNER
+        bit #KEYMAP_DOWN, r0
         bze checkKbdLeft
             clr r3 ; player unit number is 0
             mov #MOVE_WALK, MOVE_TYPE
             call requestWalkDown
             jmp afterMove
     checkKbdLeft:
-        bit #KEYMAP_LEFT, KEYBOARD_SCANNER
+        bit #KEYMAP_LEFT, r0
         bze checkKbdRight
             clr r3 ; player unit number is 0
             mov #MOVE_WALK, MOVE_TYPE
             call requestWalkLeft
             jmp afterMove
     checkKbdRight:
-        bit #KEYMAP_RIGHT, KEYBOARD_SCANNER
+        bit #KEYMAP_RIGHT, r0
         bze checkKbdFireUp
             clr r3 ; player unit number is 0
             mov #MOVE_WALK, MOVE_TYPE
             call requestWalkRight
             jmp afterMove
     checkKbdFireUp:
-            ; inc hl
-            ; cp (hl)
-            ; jr nz, checkKbdFireDown
-            ; call FIRE_UP
-            ; call CLEAR_KEY_BUFFER
-    jmp mainGameLoop
+        bit #KEYMAP_FIRE_UP, r0
+        bze checkKbdFireDown
+            bic #KEYMAP_FIRE_UP, KEYBOARD_SCANNER
+            ; call fireUp
+            jmp mainGameLoop
+    checkKbdFireDown:
+            jmp mainGameLoop
 
 
 petChar: ; 65..90
@@ -145,34 +150,39 @@ petChar: ; 65..90
 1237$: return
 
 displayLoadMessage2:
-    mov #TEXT_BUFFER + 3+10 * SCREEN_WIDTH, r4
+   .ifdef COLOR_TILES
+        mov #TEXT_BUFFER + 6 + 10 * SCREEN_WIDTH * 2, r4
+   .else
+        mov #TEXT_BUFFER + 3 + 10 * SCREEN_WIDTH, r4
+   .endif
     mov #LOAD_MSG2, r5
     mov #9, r1
 
     DLM1:
-        ; wait
         movb (r5)+, r0
         call petChar
+        .ifdef COLOR_TILES
+            movb #7, (r4)+
+        .endif
         movb r0, (r4)+
-
-        ; cmpb r0, #32 ; space char
-        ; beq DLM1.skip
-        ;     push r0, r1, r2, r3, r4, r5
-        ;         call drawBuffer
-        ;     pop r5, r4, r3, r2, r1, r0
-        ; DLM1.skip:
     sob r1, DLM1
 
-    add #6, r4
+    .ifdef COLOR_TILES
+        add #6, r4
+    .else
+        add #3, r4
+    .endif
 
     mov #MAP_NAMES_RIGHT, r5
     call calcMapName
-    add #3, r5 ; Skip digits and dash symbol
   ; Print map name
-    mov #16-3, r1
+    mov #16, r1
     DLM2:
         movb (r5)+, r0
         call petChar
+        .ifdef COLOR_TILES
+            movb #7, (r4)+
+        .endif
         movb r0, (r4)+
     sob r1, DLM2
     call drawBuffer
@@ -213,24 +223,40 @@ displayPlayerHealth:
     movb UNIT_HEALTH, r2
     asr r2
     clr r1
-    mov #TEXT_BUFFER+OFFS_PLAYER_HEALTH, r5
+    .ifdef COLOR_TILES
+        mov #TEXT_BUFFER+OFFS_PLAYER_HEALTH*2, r5
+    .else
+        mov #TEXT_BUFFER+OFFS_PLAYER_HEALTH, r5
+    .endif
     10$:
         cmpb r1, r2
         beq 20$
 
-        movb #0x66, (r5)+
+        .ifdef COLOR_TILES
+            mov #0x6607, (r5)+
+        .else
+            movb #0x66, (r5)+
+        .endif
         inc r1
     br 10$
 20$:
     bitb #1, UNIT_HEALTH
     bze 30$
-        movb #0x5C, (r5)+
+        .ifdef COLOR_TILES
+            mov #0x5C07, (r5)+
+        .else
+            movb #0x5C, (r5)+
+        .endif
         inc r1
     30$:
         cmpb r1, #6
         beq 1237$
 
-        movb #0x20, (r5)+
+        .ifdef COLOR_TILES
+            mov #0x2007, (r5)+
+        .else
+            movb #0x20, (r5)+
+        .endif
         inc r1
     br 30$
 1237$: return
@@ -250,24 +276,45 @@ displayDecimalNumber: ; TODO: replace with optimized one
     clr r0       ; r0: MSW, r1: LSW
     div #100, r0 ; quotient -> r0, remainder -> r1
     add r2, r0
+    .ifdef COLOR_TILES
+        movb #7, (r5)+
+    .endif
     movb r0, (r5)+
     clr r0
     div #10, r0
     add r2, r0
+    .ifdef COLOR_TILES
+        movb #7, (r5)+
+    .endif
     movb r0, (r5)+
     add r2, r1
+    .ifdef COLOR_TILES
+        movb #7, (r5)+
+    .endif
     movb r1, (r5)+
 return
 
 displayKeys:
-    mov #' , r0
-    mov #TEXT_BUFFER+OFFS_DISPLAY_KEYS, r5
-    10$:
-        mov #6, r1
-        20$:
-           movb r0, (r5)+
-        sob r1, 20$
-        add #SCREEN_WIDTH-6, r5
+  ; clear keys area
+   .ifdef COLOR_TILES
+        mov #0x2007, r0
+        mov #TEXT_BUFFER+OFFS_DISPLAY_KEYS*2, r5
+        10$:
+            mov #6, r1
+            20$:
+               mov r0, (r5)+
+            sob r1, 20$
+            add #(SCREEN_WIDTH-6)*2, r5
+   .else
+        mov #' , r0
+        mov #TEXT_BUFFER+OFFS_DISPLAY_KEYS, r5
+        10$:
+            mov #6, r1
+            20$:
+               movb r0, (r5)+
+            sob r1, 20$
+            add #SCREEN_WIDTH-6, r5
+   .endif
     inc pc ; INC PC + BR repeat two times
     br 10$
 
@@ -275,26 +322,47 @@ displayKeys:
     mov #0, r0
     bit r0, #KEY_TYPE_SPADE
     bze DKS1
-        movb #0x63, TEXT_BUFFER+OFFS_DISPLAY_KEY1
-        movb #0x4D, TEXT_BUFFER+OFFS_DISPLAY_KEY1+1
-        movb #0x41, TEXT_BUFFER+OFFS_DISPLAY_KEY1+SCREEN_WIDTH
-        movb #0x67, TEXT_BUFFER+OFFS_DISPLAY_KEY1+SCREEN_WIDTH+1
+        .ifdef COLOR_TILES
+            mov #0x6305, TEXT_BUFFER+OFFS_DISPLAY_KEY1*2
+            mov #0x4D05, TEXT_BUFFER+(OFFS_DISPLAY_KEY1+1)*2
+            mov #0x4105, TEXT_BUFFER+(OFFS_DISPLAY_KEY1+SCREEN_WIDTH)*2
+            mov #0x6705, TEXT_BUFFER+(OFFS_DISPLAY_KEY1+SCREEN_WIDTH+1)*2
+        .else
+            movb #0x63, TEXT_BUFFER+OFFS_DISPLAY_KEY1
+            movb #0x4D, TEXT_BUFFER+OFFS_DISPLAY_KEY1+1
+            movb #0x41, TEXT_BUFFER+OFFS_DISPLAY_KEY1+SCREEN_WIDTH
+            movb #0x67, TEXT_BUFFER+OFFS_DISPLAY_KEY1+SCREEN_WIDTH+1
+        .endif
     DKS1:
 
     bit r0, KEY_TYPE_HEART
     bze DKS2
-        movb #0x63, TEXT_BUFFER+OFFS_DISPLAY_KEY2
-        movb #0x4D, TEXT_BUFFER+OFFS_DISPLAY_KEY2+1
-        movb #0x53, TEXT_BUFFER+OFFS_DISPLAY_KEY2+SCREEN_WIDTH
-        movb #0x67, TEXT_BUFFER+OFFS_DISPLAY_KEY2+SCREEN_WIDTH+1
+        .ifdef COLOR_TILES
+            mov #0x6302, TEXT_BUFFER+OFFS_DISPLAY_KEY2*2
+            mov #0x4D02, TEXT_BUFFER+(OFFS_DISPLAY_KEY2+1)*2
+            mov #0x5302, TEXT_BUFFER+(OFFS_DISPLAY_KEY2+SCREEN_WIDTH)*2
+            mov #0x6702, TEXT_BUFFER+(OFFS_DISPLAY_KEY2+SCREEN_WIDTH+1)*2
+        .else
+            movb #0x63, TEXT_BUFFER+OFFS_DISPLAY_KEY2
+            movb #0x4D, TEXT_BUFFER+OFFS_DISPLAY_KEY2+1
+            movb #0x53, TEXT_BUFFER+OFFS_DISPLAY_KEY2+SCREEN_WIDTH
+            movb #0x67, TEXT_BUFFER+OFFS_DISPLAY_KEY2+SCREEN_WIDTH+1
+        .endif
     DKS2:
 
     bit r0, #KEY_TYPE_STAR
     bze DKS3
-        movb #0x63, TEXT_BUFFER+OFFS_DISPLAY_KEY3
-        movb #0x4D, TEXT_BUFFER+OFFS_DISPLAY_KEY3+1
-        movb #0x2A, TEXT_BUFFER+OFFS_DISPLAY_KEY3+SCREEN_WIDTH
-        movb #0x67, TEXT_BUFFER+OFFS_DISPLAY_KEY3+SCREEN_WIDTH+1
+        .ifdef COLOR_TILES
+            mov #0x6306, TEXT_BUFFER+OFFS_DISPLAY_KEY3*2
+            mov #0x4D06, TEXT_BUFFER+(OFFS_DISPLAY_KEY3+1)*2
+            mov #0x2A06, TEXT_BUFFER+(OFFS_DISPLAY_KEY3+SCREEN_WIDTH)*2
+            mov #0x6706, TEXT_BUFFER+(OFFS_DISPLAY_KEY3+SCREEN_WIDTH+1)*2
+        .else
+            movb #0x63, TEXT_BUFFER+OFFS_DISPLAY_KEY3
+            movb #0x4D, TEXT_BUFFER+OFFS_DISPLAY_KEY3+1
+            movb #0x2A, TEXT_BUFFER+OFFS_DISPLAY_KEY3+SCREEN_WIDTH
+            movb #0x67, TEXT_BUFFER+OFFS_DISPLAY_KEY3+SCREEN_WIDTH+1
+        .endif
     DKS3:
 return
 
@@ -312,20 +380,16 @@ requestWalkUp:
     movb UNIT_LOC_Y(r3), r2
     cmpb r2, #3
     beq moveNotAllowed
+        dec r2
 
-    dec r2
-
-    movb UNIT_LOC_X(r3), r1
-    call getTileFromMap
-  ; r0 now contains tile idx
-    bitb MOVE_TYPE, TILE_ATTRIB(r0)
-    bze moveNotAllowed
-
-    call checkForUnit
-    bpl moveNotAllowed ; unit on the way
-
-    decb UNIT_LOC_Y(r3)
-    mov #TRUE, r0
+        movb UNIT_LOC_X(r3), r1
+        call getTileFromMap ; stores tile idx into r0
+        bitb MOVE_TYPE, TILE_ATTRIB(r0)
+        bze moveNotAllowed
+            call checkForUnit
+            bpl moveNotAllowed ; unit on the way
+                decb UNIT_LOC_Y(r3)
+                mov #TRUE, r0
 return
 
 ; in: r3 = unit number
@@ -333,20 +397,16 @@ requestWalkDown:
     movb UNIT_LOC_Y(r3), r2
     cmpb r2, #62
     bhis moveNotAllowed
+        inc r2
 
-    inc r2
-
-    movb UNIT_LOC_X(r3), r1
-    call getTileFromMap
-  ; r0 now contains tile idx
-    bitb MOVE_TYPE, TILE_ATTRIB(r0)
-    bze moveNotAllowed
-
-    call checkForUnit
-    bpl moveNotAllowed ; unit on the way
-
-    incb UNIT_LOC_Y(r3)
-    mov #TRUE, r0
+        movb UNIT_LOC_X(r3), r1
+        call getTileFromMap ; stores tile idx into r0
+        bitb MOVE_TYPE, TILE_ATTRIB(r0)
+        bze moveNotAllowed
+            call checkForUnit
+            bpl moveNotAllowed ; unit on the way
+                incb UNIT_LOC_Y(r3)
+                mov #TRUE, r0
 return
 
    ; Located in between requestWalkXxxxx to be reached by branch instructions
@@ -359,20 +419,16 @@ requestWalkLeft:
     movb UNIT_LOC_X(r3), r1
     cmpb r0, #5
     beq moveNotAllowed
+        dec r1
 
-    dec r1
-
-    movb UNIT_LOC_Y(r3), r2
-    call getTileFromMap
-  ; r0 now contains tile idx
-    bitb MOVE_TYPE, TILE_ATTRIB(r0)
-    bze moveNotAllowed
-
-    call checkForUnit
-    bpl moveNotAllowed ; unit on the way
-
-    decb UNIT_LOC_X(r3)
-    mov #TRUE, r0
+        movb UNIT_LOC_Y(r3), r2
+        call getTileFromMap ; stores tile idx into r0
+        bitb MOVE_TYPE, TILE_ATTRIB(r0)
+        bze moveNotAllowed
+            call checkForUnit
+            bpl moveNotAllowed ; unit on the way
+                decb UNIT_LOC_X(r3)
+                mov #TRUE, r0
 return
 
 ; in: r3 = unit number
@@ -380,20 +436,16 @@ requestWalkRight:
     movb UNIT_LOC_X(r3), r1
     cmpb r1, #122
     beq moveNotAllowed
+        inc r1
 
-    inc r1
-
-    movb UNIT_LOC_Y(r3), r2
-    call getTileFromMap
-  ; r0 now contains tile idx
-    bitb MOVE_TYPE, TILE_ATTRIB(r0)
-    bze moveNotAllowed
-
-    call checkForUnit
-    bpl moveNotAllowed ; unit on the way
-
-    incb UNIT_LOC_X(r3)
-    mov #TRUE, r0
+        movb UNIT_LOC_Y(r3), r2
+        call getTileFromMap ; stores tile idx into r0
+        bitb MOVE_TYPE, TILE_ATTRIB(r0)
+        bze moveNotAllowed
+            call checkForUnit
+            bpl moveNotAllowed ; unit on the way
+                incb UNIT_LOC_X(r3)
+                mov #TRUE, r0
 return
 
 afterMove:
@@ -473,18 +525,28 @@ return
 
 ; in: r1 = X
 ;     r2 = Y
-; out: r0 = TILE
-;      r5 = MAP_ADDR
-getTileFromMap: ; TODO: use registers to provide MAP_Y, MAP_X, and return TILE and MAP_ADDR
+; out: r0 = tile idx
+;      r5 = tile addres on map
+getTileFromMap:
     mov r2, r5
-    swab r5
-    asr r5
+    swab r5 ; swab clears the carry flag as a bonus
+    ror r5
     bisb r1, r5
-  ; r1 = MAP_Y * 128 + MAP_X
+  ; r5 = Y * 128 + X
     add #MAP, r5
     clr r0
     bisb (r5), r0
 return
+
+    .include "init_game.s"
+    .include "background_tasks.s"
+    .include "display_weapon.s"
+    .include "draw_buffer.s"
+    .include "draw_map_window.s"
+    .include "print_info.s"
+    .include "v_blank_int_handler.s"
+    .include "vars.s"
+    .include "unzx0.s"
 
 LOAD_MSG2:       .ascii "LOADING: "
 MAP_NAMES_RIGHT: .ascii "01- RESEARCH LAB"
@@ -502,32 +564,18 @@ MAP_NAMES_RIGHT: .ascii "01- RESEARCH LAB"
                  .ascii "13- CASTLE ROBOT"
                  .ascii "14-ROCKET CENTER"
                  .ascii "15-      PILANDS"
-                 .even
 
-    .include "init_game.s"
-    .include "background_tasks.s"
-    .include "display_weapon.s"
-    .include "draw_buffer.s"
-    .include "draw_map_window.s"
-    .include "print_info.s"
-    .include "v_blank_int_handler.s"
-    .include "vars.s"
-    .include "unzx0.s"
-
-PET_FONT:    .incbin "build/c64tileset.gfx"
 INTRO_TEXT:  .incbin "build/intro_text.zx0"
-SCR_TEXT:    .incbin "build/scr_text.zx0"
+SCR_TEXT: .ifdef COLOR_TILES
+              .incbin "build/color_scr_text.zx0"
+          .else
+              .incbin "build/scr_text.zx0"
+          .endif
 SCR_ENDGAME: .incbin "build/scr_endgame.zx0"
+
     .even
 
 DIFFICULTY: .word 1
-
-PET_FONT_LUT:
-    current_char = 0
-    .rept 256
-       .word PET_FONT + current_char * 16
-        current_char = current_char + 1
-    .endr
 
 FILES_DATA:
     title.bin:
@@ -542,18 +590,35 @@ MAPS:
             .word 0
     .endr
 
-TILESET: .incbin "resources/c64/tileset.c64"
+TILESET:
+    .ifdef COLOR_TILES
+        .incbin "build/color_tileset.uknc"
          .equiv DESTRUCT_PATH, TILESET             ; Destruct path array (256 bytes)
          .equiv TILE_ATTRIB,   DESTRUCT_PATH + 256 ; Tile attrib array (256 bytes)
-         .equiv TILE_DATA_TL,  TILE_ATTRIB  + 256  ; Tile character top-left (256 bytes)
-         .equiv TILE_DATA_TM,  TILE_DATA_TL + 256  ; Tile character top-middle (256 bytes)
-         .equiv TILE_DATA_TR,  TILE_DATA_TM + 256  ; Tile character top-right (256 bytes)
-         .equiv TILE_DATA_ML,  TILE_DATA_TR + 256  ; Tile character middle-left (256 bytes)
-         .equiv TILE_DATA_MM,  TILE_DATA_ML + 256  ; Tile character middle-middle (256 bytes)
-         .equiv TILE_DATA_MR,  TILE_DATA_MM + 256  ; Tile character middle-right (256 bytes)
-         .equiv TILE_DATA_BL,  TILE_DATA_MR + 256  ; Tile character bottom-left (256 bytes)
-         .equiv TILE_DATA_BM,  TILE_DATA_BL + 256  ; Tile character bottom-middle (256 bytes)
-         .equiv TILE_DATA_BR,  TILE_DATA_BM + 256  ; Tile character bottom-right (256 bytes)
+         .equiv TILE_DATA, TILE_ATTRIB + 256
+         .equiv TL_OFFSET,  1 ; tile character top-left
+         .equiv TM_OFFSET,  3 ; tile character top-middle
+         .equiv TR_OFFSET,  5 ; tile character top-right
+         .equiv ML_OFFSET,  7 ; tile character middle-left
+         .equiv MM_OFFSET,  9 ; tile character middle-middle
+         .equiv MR_OFFSET, 11 ; tile character middle-right
+         .equiv BL_OFFSET, 13 ; tile character bottom-left
+         .equiv BM_OFFSET, 15 ; tile character bottom-middle
+         .equiv BR_OFFSET, 17 ; tile character bottom-right
+    .else
+        .incbin "resources/c64/tileset.c64"
+        .equiv DESTRUCT_PATH, TILESET             ; Destruct path array (256 bytes)
+        .equiv TILE_ATTRIB,   DESTRUCT_PATH + 256 ; Tile attrib array (256 bytes)
+        .equiv TILE_DATA_TL,  TILE_ATTRIB  + 256  ; Tile character top-left (256 bytes)
+        .equiv TILE_DATA_TM,  TILE_DATA_TL + 256  ; Tile character top-middle (256 bytes)
+        .equiv TILE_DATA_TR,  TILE_DATA_TM + 256  ; Tile character top-right (256 bytes)
+        .equiv TILE_DATA_ML,  TILE_DATA_TR + 256  ; Tile character middle-left (256 bytes)
+        .equiv TILE_DATA_MM,  TILE_DATA_ML + 256  ; Tile character middle-middle (256 bytes)
+        .equiv TILE_DATA_MR,  TILE_DATA_MM + 256  ; Tile character middle-right (256 bytes)
+        .equiv TILE_DATA_BL,  TILE_DATA_MR + 256  ; Tile character bottom-left (256 bytes)
+        .equiv TILE_DATA_BM,  TILE_DATA_BL + 256  ; Tile character bottom-middle (256 bytes)
+        .equiv TILE_DATA_BR,  TILE_DATA_BM + 256  ; Tile character bottom-right (256 bytes)
+    .endif
 
     .equiv TEXT_BUFFER, . ; text buffer (shadow screen), 1000 bytes (40x25)
     .equiv TEXT_BUFFER_PREV, TEXT_BUFFER + 1000

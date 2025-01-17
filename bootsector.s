@@ -52,7 +52,7 @@ ParamsStruct:
 66$:    .word 0 ; 54:
 
         .=076   ; 62
-76$:    br InitialLoader
+76$:    br initialLoader
 100$:   .word INTERRUPT_HANDLER_STUB ; Vblank int vector
 102$:   .word 0200
 ;-------------------------------------------------------------------------------
@@ -90,7 +90,7 @@ loadDiskFile:
 ; The code below will be used only once to load, install, and execute PPU module,
 ; as well as to load and execute loader.
 ; It can be overridden safely after that.
-InitialLoader: ; 0216 140 0x8E
+initialLoader: ; 0216 140 0x8E
       ; r0 - contains a drive number
       ; r1 - contains CSR
         movb r0, PS.DeviceNumber
@@ -100,40 +100,40 @@ InitialLoader: ; 0216 140 0x8E
         mov #TitleStr, r0
         10$:
             movb (r0)+, r1
-            bze LoadPPUModule
+            bze loadPPUModule
             20$:
                 tstb @#TTY.Out.State
             bpl 20$
             mov r1, @#TTY.Out.Data
         br 10$
 
-LoadPPUModule:
-        call Channel2Send
+loadPPUModule:
+        call channel2Send
         30$:
             tstb PS.Status  ; check loading status
         bmi 30$
 
       ; Allocate PPU RAM, copy PPU module, and execute it ----------------------
         mov #PPUModule_PS, ParamsAddr + 4
-        call Channel2Send               ; => Send request to PPU
+        call channel2Send               ; => Send request to PPU
                                         ; PS.A1: now contains address of allocated area
         mov #PPU_MODULE_LOADING_ADDR, PPUModule_PS.A2 ; Arg 2: addr of mem block in CPUs RAM
         mov #PPU_ModuleSizeWords, PPUModule_PS.A3     ; Arg 3: size of mem block, words
         movb #020, PPUModule_PS.Request ; 020 - Mem copy CPU -> PPU
-        call Channel2Send               ; => Send request to PPU
+        call channel2Send               ; => Send request to PPU
         movb #030, PPUModule_PS.Request ; 030 - Execute programm
-        call Channel2Send               ; => Send request to PPU
+        call channel2Send               ; => Send request to PPU
       ;------------------------------------------------------------------------;
       ; PPU will clear the value when it finishes initialization               ;
         WaitUntilPPUInitializes:
-            tst @#PPUCommandArg
+            tst PPUCommandArg
         bnz WaitUntilPPUInitializes
       ;-------------------------------------------------------------------------
         mov #main.bin, r0
         call loadDiskFile
-        jmp @#MAIN_START
+        jmp MAIN_START
 ;-------------------------------------------------------------------------------
-Channel2Send:
+channel2Send:
         mov #ParamsAddr, r0 ; r0 - pointer to channel's init sequence array
         mov #8, r1          ; r1 - size of the array, 8 bytes
         10$:

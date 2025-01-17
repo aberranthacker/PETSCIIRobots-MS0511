@@ -195,7 +195,7 @@
     ; Misc
 .equiv MAP_WIDTH, 128
 .equiv MAP_HEIGHT, 64
-.equiv MAP_UNIT_COUNT, 64
+.equiv MAP_UNITS_COUNT, 64
 .equiv MAPS_TOTAL, 15
 
     ; Game data structures
@@ -203,15 +203,15 @@
 .equiv MAP_BEGIN,   LEVEL_MAP
             ; Start of map ==>
 .equiv UNIT_TYPE,    MAP_BEGIN
-.equiv UNIT_LOC_X,   UNIT_TYPE + MAP_UNIT_COUNT
-.equiv UNIT_LOC_Y,   UNIT_LOC_X + MAP_UNIT_COUNT
-.equiv UNIT_A,       UNIT_LOC_Y + MAP_UNIT_COUNT
-.equiv UNIT_B,       UNIT_A + MAP_UNIT_COUNT
-.equiv UNIT_C,       UNIT_B + MAP_UNIT_COUNT
-.equiv UNIT_D,       UNIT_C + MAP_UNIT_COUNT
-.equiv UNIT_HEALTH,  UNIT_D + MAP_UNIT_COUNT
-.equiv UNUSED_SPACE, UNIT_HEALTH + MAP_UNIT_COUNT
-.equiv MAP,          UNUSED_SPACE + MAP_UNIT_COUNT * 4 ; 256 bytes of unsused space
+.equiv UNIT_LOC_X,   UNIT_TYPE    + MAP_UNITS_COUNT
+.equiv UNIT_LOC_Y,   UNIT_LOC_X   + MAP_UNITS_COUNT
+.equiv UNIT_A,       UNIT_LOC_Y   + MAP_UNITS_COUNT
+.equiv UNIT_B,       UNIT_A       + MAP_UNITS_COUNT
+.equiv UNIT_C,       UNIT_B       + MAP_UNITS_COUNT
+.equiv UNIT_D,       UNIT_C       + MAP_UNITS_COUNT
+.equiv UNIT_HEALTH,  UNIT_D       + MAP_UNITS_COUNT
+.equiv UNUSED_SPACE, UNIT_HEALTH  + MAP_UNITS_COUNT
+.equiv MAP,          UNUSED_SPACE + MAP_UNITS_COUNT * 4 ; 256 bytes of unsused space
             ; <== end of map.
 .equiv MAP_END,     MAP + (MAP_WIDTH * MAP_HEIGHT) ; 8192 bytes
 

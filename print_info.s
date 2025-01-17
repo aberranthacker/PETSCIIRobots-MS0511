@@ -5,18 +5,29 @@ printIntroMessage:
 ; corrupts: r0, r1, r4, r5
 printInfo:
     call scrollInfo
-    mov #TEXT_BUFFER + OFFS_PRINT_INFO, r4
+    .ifdef COLOR_TILES
+        mov #TEXT_BUFFER + OFFS_PRINT_INFO*2, r4
+    .else
+        mov #TEXT_BUFFER + OFFS_PRINT_INFO, r4
+    .endif
     PI01:
         movb (r5)+, r0
         bze 1237$
         bmi PI02
 
         call petChar
+        .ifdef COLOR_TILES
+            movb #3, (r4)+
+        .endif
         movb r0, (r4)+
     br PI01
 
     PI02:
-        mov #TEXT_BUFFER + OFFS_PRINT_INFO, r4
+        .ifdef COLOR_TILES
+            mov #TEXT_BUFFER + OFFS_PRINT_INFO*2, r4
+        .else
+            mov #TEXT_BUFFER + OFFS_PRINT_INFO, r4
+        .endif
         call scrollInfo
     br PI01
 1237$: return
@@ -24,23 +35,41 @@ printInfo:
 scrollInfo:
     push r5
     push r4
-        mov #TEXT_BUFFER + OFFS_PRINT_INFO - SCREEN_WIDTH, r5
-        mov #TEXT_BUFFER + OFFS_PRINT_INFO - SCREEN_WIDTH*2, r4
-        mov #32/2, r1
+        .ifdef COLOR_TILES
+            mov #TEXT_BUFFER + (OFFS_PRINT_INFO - SCREEN_WIDTH)*2, r5
+            mov #TEXT_BUFFER + (OFFS_PRINT_INFO - SCREEN_WIDTH*2)*2, r4
+            mov #32, r1
+        .else
+            mov #TEXT_BUFFER + OFFS_PRINT_INFO - SCREEN_WIDTH, r5
+            mov #TEXT_BUFFER + OFFS_PRINT_INFO - SCREEN_WIDTH*2, r4
+            mov #32/2, r1
+        .endif
         10$:
             mov (r5)+, (r4)+
         sob r1, 10$;
 
-        mov #TEXT_BUFFER + OFFS_PRINT_INFO, r5
-        mov #TEXT_BUFFER + OFFS_PRINT_INFO - SCREEN_WIDTH, r4
-        mov #32/2, r1
+        .ifdef COLOR_TILES
+            mov #TEXT_BUFFER + OFFS_PRINT_INFO*2, r5
+            mov #TEXT_BUFFER + (OFFS_PRINT_INFO - SCREEN_WIDTH)*2, r4
+            mov #32, r1
+        .else
+            mov #TEXT_BUFFER + OFFS_PRINT_INFO*2, r5
+            mov #TEXT_BUFFER + OFFS_PRINT_INFO - SCREEN_WIDTH, r4
+            mov #32/2, r1
+        .endif
         20$:
             mov (r5)+, (r4)+
         sob r1, 20$;
 
-        mov #TEXT_BUFFER + OFFS_PRINT_INFO, r5
-        mov #32/2, r1
-        mov #0x2020, r0
+        .ifdef COLOR_TILES
+            mov #TEXT_BUFFER + OFFS_PRINT_INFO*2, r5
+            mov #32, r1
+            mov #0x2007, r0
+        .else
+            mov #TEXT_BUFFER + OFFS_PRINT_INFO, r5
+            mov #32/2, r1
+            mov #0x2020, r0
+        .endif
         30$:
             mov r0, (r5)+
         sob r1, 30$

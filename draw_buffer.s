@@ -26,7 +26,7 @@
 .equiv DRAW_CHAR_REPS, 2 ; 2 is max number, `sob` will be out of range otherwise
 
 drawBuffer:
-    .ifdef PPU_DRAW
+    .ifdef COLOR_TILES
         tstb @#CCH1OS
         bpl .-4
         movb #TRUE, @#CCH1OD
@@ -53,3 +53,13 @@ drawBuffer:
         jmp drawBuffer.loop
     .endif
 1237$: return
+
+.ifndef COLOR_TILES
+    PET_FONT: .incbin "build/c64tileset.gfx"
+    PET_FONT_LUT:
+        current_char = 0
+        .rept 256
+           .word PET_FONT + current_char * 16
+            current_char = current_char + 1
+        .endr
+.endif

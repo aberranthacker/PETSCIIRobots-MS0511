@@ -18,14 +18,18 @@
 start:
         MTPS #PR7
         MOV #0100000, SP
-
+        mov #PPU_INTERRUPT_VECTORS, r0
+        10$:
+            mov #interruptHandlerStub, (r0)+
+            tst (r0)
+        bnz 10$
       ; Setting up PPU address space control register:
       ;                        5432109876543210
       ; Its default value is 0b0000001100000001
 
       ; bit 0: if clear, disables ROM chip in the range 0100000..0117777
-      ;       which allows to enable RW access to RAM in that range
-      ;       when bit 4 is also set
+      ;        which allows to enable RW access to RAM in that range
+      ;        when bit 4 is also set
       ; bits 1-3: used to select ROM cartridge banks
       ; bit 4: replaces ROM in the range 0100000..0117777 with RAM (see bit 0)
       ; bit 5: enables write-only access to RAM in the range 0120000..0137777
@@ -39,20 +43,27 @@ start:
       ; **However**, the UKNCBL emulator allows to reading from the RAM as well!
       ; **Beware** this is **not** how the real hardware behaves!
 ;-------------------------------------------------------------------------------
-        MOV #0x0F0, @#PASWCR
     .if AUX_SCREEN_LINES_COUNT != 0
-        CALL ClearAuxScreen
+        CALL clearAuxScreen
     .endif
+        .ifdef COLOR_TILES
+            call clearScreen
+        .else
+            mov #1, @#BITPLANES_MASK_REG
+        .endif
         .include "ppu/sltab_init.s"
-        MOV #0x001, @#PASWCR
+        mov #0x001, @#PASWCR
 ;-------------------------------------------------------------------------------
         MOV #SLTAB, @#0272 ; use our SLTAB
 
         call Puts
 
-        MOV #VblankIntHandler, @#0100
+        MOV #vblankIntHandler, @#0100
 
         MOV #keyboardIntHadler,@#KBINT
+      ; Установим адрес таблицы раскладки клавиатуры на таблицу режима ГРАФ
+      ; Хак, переводящий раскладку в эмуляторе UKNCBTL c qwerty на jcuken
+        mov #07774, @#07214
 
         MOV #PCH0II, R0
         MOV #Channel0In_IntHandler, (R0)+
@@ -69,29 +80,31 @@ start:
 
     .ifdef DETECT_ABERRANT_SOUND_MODULE
         .equiv ScanRangeWords, 3
-        MOV #PSG0+ScanRangeWords * 2, R1
-        MOV #Trap4, @#4
-      ; Aberrant Sound Module uses addresses range 0177360-0177377
-      ; 16 addresses in total
-        MOV #ScanRangeWords, R0
-        TestNextSoundBoardAddress:
-            TST -(R1)
-        SOB R0, TestNextSoundBoardAddress
-      ; R1 now contains 0177360, address of PSG0
-        MOV #PSG1, R2
+        mov #PSG0+ScanRangeWords * 2, r1
+        push @#4
+            mov #Trap4, @#4
+          ; Aberrant Sound Module uses addresses range 0177360-0177377
+          ; 16 addresses in total
+            mov #ScanRangeWords, r0
+            TestNextSoundBoardAddress:
+                tst -(r1)
+            sob r0, TestNextSoundBoardAddress
+          ; R1 now contains 0177360, address of PSG0
+            mov #PSG1, r2
 
-        TST @#Trap4Detected
-        BZE AberrantSoundModulePresent
-
-        MOV #STUB_REGISTER, R1
-        MOV R1, R2
-
-    AberrantSoundModulePresent:
-        CLR @#Trap4Detected
-        .ifdef INCLUDE_AKG_PLAYER
-        .endif
-        MOV #0173362, @#4 ; restore back Trap 4 handler
+            tst @#Trap4Detected
+            bze aberrant_sound_module_present
+                mov #STUB_REGISTER, r1
+                mov r1, r2
+            aberrant_sound_module_present:
+                clr @#Trap4Detected
+                .ifdef INCLUDE_AKG_PLAYER
+                .endif
+        pop @#4
     .endif
+        mov #trap4Handler, @#04
+        mov #trap10Handler, @#010
+        mov #trap24Handler, @#024
 
         MOV @#023166, rseed1 ; set cursor presence counter value as random seed
 
@@ -121,63 +134,70 @@ Queue_Loop:
 ;-------------------------------------------------------------------------------
 CommandsVectors:
         .word loadDiskFile
-        .word SetPalette            ; PPU.SetPalette
-        .word ClearScreen           ; PPU.ClearScreen
+        .word setPalette            ; PPU.SetPalette
+        .word clearScreen           ; PPU.ClearScreen
         .word ssy_music_play
         .word test_timer
 ;-------------------------------------------------------------------------------
-ClearAuxScreen: ;------------------------------------------------------------{{{
+clearAuxScreen: ;------------------------------------------------------------{{{
     .if AUX_SCREEN_LINES_COUNT != 0
         MOV #AUX_SCREEN_LINES_COUNT * (4/LINE_SCALE), R1
         MOV #DTSOCT,R4
         MOV #PBPADR,R5
         MOV #AUX_SCREEN_ADDR,(R5)
-        CLR @#PBPMSK ; write to all bit-planes
         CLR @#BP01BC ; background color, pixels 0-3
         CLR @#BP12BC ; background color, pixels 4-7
+        push @#BITPLANES_MASK_REG
+            CLR @#PBPMSK ; write to all bit-planes
 
-        100$:
-           .rept 10
-            CLR (R4)
-            INC (R5)
-           .endr
-        SOB R1,100$
+            100$:
+               .rept 10
+                CLR (R4)
+                INC (R5)
+               .endr
+            SOB R1,100$
 
+        pop @#BITPLANES_MASK_REG
         RETURN
     .endif
 ;----------------------------------------------------------------------------}}}
-ClearScreen: ;---------------------------------------------------------------{{{
-        MOV #MAIN_SCREEN_LINES_COUNT * (4/LINE_SCALE), R1
-        MOV #DTSOCT,R4
-        MOV #PBPADR,R5
-        MOV #FB / 2,(R5)
-        CLR @#PBPMSK ; write to all bit-planes
-        CLR @#BP01BC ; background color, pixels 0-3
-        CLR @#BP12BC ; background color, pixels 4-7
+clearScreen: ;---------------------------------------------------------------{{{
+        rept_count = 10
+
+        mov #MAIN_SCREEN_LINES_COUNT * LINE_WIDTHW / rept_count, r1
+        mov #DTSOCT, r4
+        mov #PBPADR, r5
+        mov #FB / 2, (r5)
+        clr @#BP01BC ; background color, pixels 0-3
+        clr @#BP12BC ; background color, pixels 4-7
 
         100$:
-           .rept 10
-            CLR (R4)
-            INC (R5)
+           .rept rept_count
+                clr (R4)
+                inc (R5)
            .endr
-        SOB R1,100$
+        sob r1,100$
 
-        RETURN
+        return
 ;----------------------------------------------------------------------------}}}
     .ifdef INCLUDE_AKG_PLAYER ;----------------------------------------------{{{
     .endif ;-----------------------------------------------------------------}}}
 loadDiskFile: ; -------------------------------------------------------------{{{
-        MOV #VblankIntHandler.Minimal, @#0100
+        mov #vblankIntHandler.minimal, @#0100
+      ; in: r0 = address of params struct in CPU memory
+        clc
+        ror r0 ; prepare the address to be loaded into address register 0177010
+        mov r0, @#023200 ; store params struct address for firmware subroutine
+      ; firmware subroutine that handles floppy drive
+      ; it call programmable timer subroutine which uses value at 07050
+        call @#0131176
 
-        MOV R0, @#023200 ; set ParamsStruct address for firmware proc to use
-        CALL @#0125030   ; firmware proc that handles channel 2
-        WaitWhileLoading:
-          ; check operation status code (ParamsStruct was copied here)
-            TSTB @#023334
-        BMI WaitWhileLoading
+        wait_while_loading:
+            tstb @#023334 ; check operation status code (params struct copy)
+        bmi wait_while_loading
 
-        MOV #VblankIntHandler, @#0100
-        RETURN
+        mov #vblankIntHandler, @#0100
+1237$:  return
 ;----------------------------------------------------------------------------}}}
 test_timer: ; ---------------------------------------------------------------{{{
         mov #3434, @#TMRBUF
@@ -207,11 +227,20 @@ RandomWord:
         ADD #0x9820, R0; add the secondary seed value to R0
         MOV R0, rseed2 ; store the result back to rseed2
 
-SubroutineStub:
-        RETURN
+subroutineStub:
+    return
+interruptHandlerStub:
+    br .
+    nop
+    nop
+PPU_INTERRUPT_VECTORS:
+    .word 04, 010, 014, 020, 024, 030, 034, 0100
+    .word 0300, 0304, 0310, 0314, 0320, 0324, 0330, 0334, 0340
+    .word 0 ; terminator
 
         .include "ppu/channel_0_in_int_handler.s"
         .include "ppu/channel_1_in_int_handler.s"
+        .include "ppu/errors_handler.s"
         .include "ppu/keyboard_int_handler.s"
         .include "ppu/set_palette.s"
         .include "ppu/trap_4_int_handler.s"
@@ -225,7 +254,7 @@ CommandsQueue_Top:
         .ds 2*16
 CommandsQueue_Bottom:
 
-WakingUpStr:
+WAKING_UP_STR:
         .asciz "Waking up the robots..."
         .even
 

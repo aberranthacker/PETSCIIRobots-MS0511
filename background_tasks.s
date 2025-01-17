@@ -12,10 +12,10 @@ backgroundTasks:
 unitAI:
   ; Now check to see if it is time to run background tasks
     tst BGTIMER1
-    bnz AI000
+    bnz run_background_tasks
         return
 
-    AI000:
+    run_background_tasks:
         clr BGTIMER1 ; reset background timer
         clr UNIT
 
@@ -25,56 +25,52 @@ unitAI:
         inc #0
         mov UNIT, r3
         cmp r3, #64 ; end of units
-        bne AI001
+        bne check_if_unit_exists
             return  ; return control to main program
 
-        AI001:
-        tstb UNIT_TYPE(r3) ; Does unit exist?
-        bze aiLoop
-
-        AI002:
-      ; Unit found to exist, now check it's timer.
-      ; unit code won't run until timer hits zero.
-        tstb UNIT_TIMER_A(r3)
-        bze AI003
-            decb UNIT_TIMER_A(r3)
-            br aiLoop
-
-        AI003:
-      ; Unit exists and timer has triggered
-      ; The unit type determines which AI routine is run.
-        movb UNIT_TYPE(r3), r0
-        cmpb r0, #24 ; max different unit types in chart
-        bhi aiLoop   ; abort if greater
-
-        asl r0
-        jmp @AI_ROUTINES_LUT(r0)
+        check_if_unit_exists:
+            tstb UNIT_TYPE(r3) ; Does unit exist?
+            bze aiLoop
+              ; Unit found to exist, now check it's timer.
+              ; unit code won't run until timer hits zero.
+                tstb UNIT_TIMER_A(r3)
+                bze timer_has_triggered
+                    decb UNIT_TIMER_A(r3)
+                    br aiLoop
+                timer_has_triggered:
+                  ; Unit exists and timer has triggered
+                  ; The unit type determines which AI routine is run.
+                    movb UNIT_TYPE(r3), r0
+                    cmpb r0, #24 ; max different unit types in chart
+                    bhi aiLoop   ; abort if greater
+                        asl r0
+                        jmp @AI_ROUTINES_LUT(r0)
 
 AI_ROUTINES_LUT:
-       .word aiLoop; DUMMY_ROUTINE       ; UNIT TYPE 00  ; non-existent unit
-       .word aiLoop; DUMMY_ROUTINE       ; UNIT TYPE 01  ; player unit - can't use
-       .word leftRightDroid              ; UNIT TYPE 02
-       .word upDownDroid                 ; UNIT TYPE 03
-       .word aiLoop ; hoverAttack        ; UNIT TYPE 04
-       .word aiLoop ; waterDroid         ; UNIT TYPE 05
-       .word aiLoop ; timeBomb           ; UNIT TYPE 06
-       .word aiLoop ; transporterPad     ; UNIT TYPE 07
-       .word aiLoop ; deadRobot          ; UNIT TYPE 08
-       .word aiLoop ; evilbot            ; UNIT TYPE 09
-       .word aiDoor                      ; UNIT TYPE 10
-       .word aiLoop ; smallExplosion     ; UNIT TYPE 11
-       .word aiLoop ; pistolFireUp       ; UNIT TYPE 12
-       .word aiLoop ; pistolFireDown     ; UNIT TYPE 13
-       .word aiLoop ; pistolFireLeft     ; UNIT TYPE 14
-       .word aiLoop ; pistolFireRight    ; UNIT TYPE 15
-       .word trashCompactor              ; UNIT TYPE 16
-       .word aiLoop ; upDownRollerbot    ; UNIT TYPE 17
-       .word aiLoop ; leftRightRollerbot ; UNIT TYPE 18
-       .word aiLoop ; elevator           ; UNIT TYPE 19
-       .word aiLoop ; magnet             ; UNIT TYPE 20
-       .word aiLoop ; magnetizedRobot    ; UNIT TYPE 21
-       .word aiLoop ; waterRaftLr        ; UNIT TYPE 22
-       .word aiLoop ; dematerialize      ; UNIT TYPE 23
+       .word aiLoop; DUMMY_ROUTINE    ; UNIT_TYPE 00 ; non-existent unit
+       .word aiLoop; DUMMY_ROUTINE    ; UNIT_TYPE 01 ; player unit - can't use
+       .word leftRightDroid           ; UNIT_TYPE 02
+       .word upDownDroid              ; UNIT_TYPE 03
+       .word aiLoop ; hoverAttack     ; UNIT_TYPE 04
+       .word aiLoop ; waterDroid      ; UNIT_TYPE 05
+       .word aiLoop ; timeBomb        ; UNIT_TYPE 06
+       .word aiLoop ; transporterPad  ; UNIT_TYPE 07
+       .word aiLoop ; deadRobot       ; UNIT_TYPE 08
+       .word aiLoop ; evilbot         ; UNIT_TYPE 09
+       .word aiDoor                   ; UNIT_TYPE 10
+       .word smallExplosion           ; UNIT_TYPE 11
+       .word pistolFireUp             ; UNIT_TYPE 12
+       .word pistolFireDown           ; UNIT_TYPE 13
+       .word pistolFireLeft           ; UNIT_TYPE 14
+       .word pistolFireRight          ; UNIT_TYPE 15
+       .word trashCompactor           ; UNIT_TYPE 16
+       .word upDownRollerbot          ; UNIT_TYPE 17
+       .word leftRightRollerbot       ; UNIT_TYPE 18
+       .word aiLoop ; elevator        ; UNIT_TYPE 19
+       .word aiLoop ; magnet          ; UNIT_TYPE 20
+       .word aiLoop ; magnetizedRobot ; UNIT_TYPE 21
+       .word aiLoop ; waterRaftLr     ; UNIT_TYPE 22
+       .word aiLoop ; dematerialize   ; UNIT_TYPE 23
 
 ailpCheckForWindowRedraw:
     call checkForWindowRedraw
@@ -113,23 +109,21 @@ leftRightDroid:
     call hoverbotAnimate
     movb #HOVERBOT_MOVE_SPD, UNIT_TIMER_A(r3)
     tstb UNIT_A(r3) ; directrion: 0=LEFT, 1=RIGHT
-    bnz LRD01
+    bnz lrd.switch_to_left
+        mov #MOVE_HOVER, MOVE_TYPE
+        call requestWalkLeft
+        bnz lrd.blocked_by_unit
+            mov UNIT, r3
+            movb #1, UNIT_A(r3) ; change direction
+            jmp ailpCheckForWindowRedraw
 
-    mov #MOVE_HOVER, MOVE_TYPE
-    call requestWalkLeft
-    bnz LRD02
-        mov UNIT, r3
-        movb #1, UNIT_A(r3) ; change direction
-        jmp ailpCheckForWindowRedraw
-
-    LRD01:
-    mov #MOVE_HOVER, MOVE_TYPE
-    call requestWalkRight
-    bnz LRD02
-        clrb UNIT_A(r3)
-
-    LRD02:
-    jmp ailpCheckForWindowRedraw
+    lrd.switch_to_left:
+        mov #MOVE_HOVER, MOVE_TYPE
+        call requestWalkRight
+        bnz lrd.blocked_by_unit
+            clrb UNIT_A(r3)     ; change direction
+        lrd.blocked_by_unit:
+            jmp ailpCheckForWindowRedraw
 
 ; In this AI routine, the droid simply goes UP until it hits an object,
 ; and then reverses direction and does the same, bouncing back and forth.
@@ -142,17 +136,17 @@ upDownDroid:
 
     mov #MOVE_HOVER, MOVE_TYPE
     call requestWalkUp
-    bnz UDD02
+    bnz udd.blocked_by_unit
         movb #1, UNIT_A(r3) ; change direction
         jmp ailpCheckForWindowRedraw
 
     UDD01:
     mov #MOVE_HOVER, MOVE_TYPE
     call requestWalkDown
-    bnz UDD02
-        clrb UNIT_A(r3)
+    bnz udd.blocked_by_unit
+        clrb UNIT_A(r3)     ; change direction
 
-    UDD02:
+    udd.blocked_by_unit:
     jmp ailpCheckForWindowRedraw
 
 ; in: r3 = unit number
@@ -325,25 +319,25 @@ doorCloseFull:
       ; if player near door, lets open it.
       ; first check if locked
         movb UNIT_C(r3), r0 ; lock status
-        bze dcf.open_the_door   ; unlocked
+        bze open_the_door   ; unlocked
             decb r0 ; cmpb r0, #1          ; spade key lock?
-            bnz dcf.check_heart_key_lock
+            bnz check_heart_key_lock
                 bitb #KEY_TYPE_SPADE, KEYS ; does player have the key?
-                bnz dcf.open_the_door
+                bnz open_the_door
                 br dcf.exit
-            dcf.check_heart_key_lock:
+            check_heart_key_lock:
                 decb r0 ; cmpb r0, #2          ; heart key lock?
-                bnz dcf.check_star_key_lock
+                bnz check_star_key_lock
                     bitb #KEY_TYPE_HEART, KEYS ; does player have the key?
-                    bnz dcf.open_the_door
+                    bnz open_the_door
                     br dcf.exit
-                dcf.check_star_key_lock:
+                check_star_key_lock:
                     decb r0 ; cmpb r0, #3          ; star key lock?
                     bnz dcf.exit                   ; SHOULD NEVER HAPPEN
                         bitb #KEY_TYPE_STAR, KEYS  ; does player have the key?
-                        bnz dcf.open_the_door
+                        bnz open_the_door
                         br dcf.exit
-        dcf.open_the_door:
+        open_the_door:
             ; mov #SND_DOOR, r0
             ; call playSound
             tstb UNIT_A(r3)
@@ -363,13 +357,13 @@ doorCloseFull:
             movb #DOOR_SPEED, UNIT_TIMER_A(r3)
             jmp ailpCheckForWindowRedraw
 
-;  in: r0 = tile
-;      r1 = X
-;      r2 = Y
+; in: r0 = tile
+;     r1 = X
+;     r2 = Y
 ; out: r2 = tile map addr
 plotTileToMap:
-    swab r2
-    asr r2
+    swab r2 ; swab clears the carry flag as a bonus
+    ror r2
     add r1, r2
     add #MAP, r2
 
@@ -418,39 +412,39 @@ doorCheckProximity:
     _movb UNIT_LOC_X(r3), r0 ; door unit
     _movb UNIT_LOC_X, r1     ; player unit
     sub r1, r0
-    bpl PRD2
+    bpl horizontal_door_distance_positive
         neg r0 ; convert two's comp back to positive
-    PRD2:
-    cmp r0, #1 ; check if same horizontal tile or next to it
-    blos PRD3
-        sez ; player not detected
-        return
+    horizontal_door_distance_positive:
+        cmp r0, #1 ; check if same horizontal tile or next to it
+        blos PRD3
+            sez ; player not detected
+            return
 
-    PRD3:
-  ; Now check vertical proximity
-    _movb UNIT_LOC_Y(r3), r0 ; door unit
-    _movb UNIT_LOC_Y, r1     ; player unit
-    sub r1, r0
-    bpl PRD5
-        neg r0 ; convert two's comp back to positive
-    PRD5:
-    cmp r0, #1 ; check if same vertical tile or next to it
-    blos PRD6
-        sez ; player not detected
-        return
+        PRD3:
+          ; Now check vertical proximity
+            _movb UNIT_LOC_Y(r3), r0 ; door unit
+            _movb UNIT_LOC_Y, r1     ; player unit
+            sub r1, r0
+            bpl vertical_door_distance_positive
+                neg r0 ; convert two's comp back to positive
+            vertical_door_distance_positive:
+                cmp r0, #1 ; check if same vertical tile or next to it
+                blos 10$
+                    sez ; player not detected
+                    return
 
-    PRD6:
-    clz ; player detected
-return
+                10$:
+                    clz ; player detected
+                    return
 
 
 ; in: r3 = trash compactor unit number
 trashCompactor:
     movb UNIT_A(r3), r0
     bze tcOpenState
-        dec r0           ; cmp r0, #1 ; mid-closing state
+        dec r0                   ; cmp r0, #1 ; mid-closing state
         bze tcMidClosing
-            dec r0           ; cmp r0, #2 ; closed state
+            dec r0               ; cmp r0, #2 ; closed state
             _jmp ZE, tcClosedState
                 dec r0           ; cmp r0, #3 ; mid-opening state
                 _jmp ZE, tcMidOpening
@@ -517,7 +511,7 @@ tcMidClosing:
         bze TCMC3
 
         inc r1
-    cmp r1, #32
+        cmp r1, #32
     bne TCMC2
     jmp ailpCheckForWindowRedraw
 
@@ -573,3 +567,415 @@ drawTrashCompactor:
 
     call checkForWindowRedraw
 rts r5
+
+upDownRollerbot:
+    movb #ROLLERBOT_MOVE_SPD, UNIT_TIMER_A(r3)
+    call rollerbotAnimate
+
+    tstb UNIT_A(r3) ; check direction 0=UP 1=DOWN
+    bnz UDR01
+        mov #MOVE_WALK, MOVE_TYPE
+        call requestWalkUp
+        bnz UDR02 ; unit in the way
+            movb #1, UNIT_A(r3) ; change direction
+            call rollerbotFireDetect
+            jmp ailpCheckForWindowRedraw
+    UDR01:
+        mov #MOVE_WALK, MOVE_TYPE
+        call requestWalkDown
+        bnz UDR02 ; unit in the way
+            clrb UNIT_A(r3) ; change direction
+        UDR02:
+            call rollerbotFireDetect
+            jmp ailpCheckForWindowRedraw
+
+leftRightRollerbot:
+    movb #ROLLERBOT_MOVE_SPD, UNIT_TIMER_A(r3)
+    call rollerbotAnimate
+
+    tstb UNIT_A(r3) ; check direction 0=LEFT 1=RIGHT
+    bnz LRR01
+        mov #MOVE_WALK, MOVE_TYPE
+        call requestWalkLeft
+        bnz LRR02 ; unit in the way
+            movb #1, UNIT_A(r3) ; change direction
+            call rollerbotFireDetect
+            jmp ailpCheckForWindowRedraw
+    LRR01:
+        mov #MOVE_WALK, MOVE_TYPE
+        call requestWalkRight
+        bnz LRR02 ; unit in the way
+            clrb UNIT_A(r3) ; change direction
+        LRR02:
+            call rollerbotFireDetect
+            jmp ailpCheckForWindowRedraw
+
+rollerbotFireDetect:
+    movb UNIT_LOC_X(r3), RBAF_X
+    movb UNIT_LOC_Y(r3), RBAF_Y
+  ; See if we're lined up vertically
+    cmpb UNIT_LOC_Y, UNIT_LOC_Y(r3)
+    beq rollerbotFireLr
+      ; See if we're lined up horizontally
+        cmpb UNIT_LOC_Y(r3), UNIT_LOC_Y
+        beq rollerbotFireUd
+            return
+
+    rollerbotFireLr:
+        cmpb UNIT_LOC_X(r3), UNIT_LOC_X
+        blo rollerbot_fire_right
+          ; fire left
+            ; check to see if distance is less than 5
+            movb UNIT_LOC_X(r3), r0
+            sub #5, r0;
+            cmpb UNIT_LOC_X, r0
+            bhis 10$
+                return ; the distance is more than 5
+            10$:
+                mov #28, r2
+                20$:
+                    tstb UNIT_TYPE(r2)
+                    bze RFL2
+
+                    inc r2
+                    cmp r2, #32
+                bne 20$
+                    return
+
+            RFL2:
+                movb #AI_PISTOL_LEFT, UNIT_TYPE(r2) ; pistol fire left AI
+                mov #TILE_PISTOL_HORZ, r0 ; tile for horizontal weapons fire
+                br rollerbotAfterFire
+
+        rollerbot_fire_right:
+            ; Check to see if distance is less than 5
+            movb UNIT_LOC_X(r3), r0
+            add #5, r0;
+            cmpb UNIT_LOC_X, r0
+            blos 10$
+                return ; the distance is more than 5
+            10$:
+                mov #28, r2
+                20$:
+                    tstb UNIT_TYPE(r2)
+                    bze RFR2
+
+                    inc r2
+                    cmp r2, #32
+                bne 20$
+                    return
+
+            RFR2:
+                movb #AI_PISTOL_RIGHT, UNIT_TYPE(r2) ; pistol fire right AI
+                mov #TILE_PISTOL_HORZ, r0 ; tile for horizontal weapons fire
+                br rollerbotAfterFire
+
+rollerbotFireUd:
+            ; ld hl,UNIT_LOC_Y
+            ; call unit_abs_x
+            ; ld a,(hl)
+            ; ld hl,UNIT_LOC_Y
+            ; cp (hl)
+            ; jr c,ROLLERBOT_FIRE_DOWN
+
+rollerbotFireUp:
+            ; ;Check to see if distance is less than 5
+            ; ld hl,UNIT_LOC_Y
+            ; call unit_abs_x
+            ; ld a,(hl)           ;robot
+            ; ld hl,UNIT_LOC_Y
+            ; sub (hl)            ;player
+            ; cp 4
+            ; ret nc
+
+RFU0:
+            ; ld c,28
+RFU1:
+            ; ld hl,UNIT_TYPE
+            ; call offc_abs_x
+            ; ld a,(hl)
+            ; or a
+            ; jr z,RFU2
+            ; inc c
+            ; ld a,c
+            ; cp 32
+            ; jr nz,RFU1
+            ; ret
+
+RFU2:
+            ; ld hl,UNIT_TYPE
+            ; call offc_abs_x
+            ; ld (hl),AI_PISTOL_UP        ;pistol fire UP AI
+            ; ld a,TILE_PISTOL_VERT       ;tile for VERTICAL weapons fire
+            ; jp ROLLERBOT_AFTER_FIRE
+
+ROLLERBOT_FIRE_DOWN:
+            ; ld hl,UNIT_LOC_Y
+            ; ld a,(hl)           ;player
+            ; call unit_abs_x
+            ; sub (hl)            ;robot
+            ; cp 4
+            ; ret nc
+
+RFD0:
+            ; ld c,28
+RFD1:
+            ; ld hl,UNIT_TYPE
+            ; call offc_abs_x
+            ; ld a,(hl)
+            ; or a
+            ; jr z,RFD2
+            ; inc c
+            ; ld a,c
+            ; cp 32
+            ; jr nc,RFD1
+            ; ret
+
+RFD2:
+            ; ld hl,UNIT_TYPE
+            ; call offc_abs_x
+            ; ld (hl), AI_PISTOL_DOWN ;pistol fire DOWN AI
+            ; ld a, TILE_PISTOL_VERT  ;tile for VERTICAL weapons fire
+
+rollerbotAfterFire:
+    movb r0, UNIT_TILE(r2)
+    movb #5, UNIT_A(r2)    ; travel distance.
+    clrb UNIT_B(r2)        ; weapon-type = pistol
+    clrb UNIT_TIMER_A(r2)
+
+   .equiv RBAF_X, .+2
+    movb #0, UNIT_LOC_X(r2)
+
+   .equiv RBAF_Y, .+2
+    movb #0, UNIT_LOC_Y(r2)
+
+    ; mov #SND_ROBOT_GUN, r0
+    ; jmp playSound          ;call:return
+return
+
+
+rollerbotAnimate:
+    tstb UNIT_TIMER_B(r3)
+    bze 10$
+        decb UNIT_TIMER_B(r3)
+        return
+    10$:
+        movb #ROLLERBOT_ANIM_SPEED, UNIT_TIMER_B(r3) ; reset animate timer
+
+        cmpb UNIT_TILE(r3), #TILE_ROLLERBOT_A
+        bne 20$
+            movb #TILE_ROLLERBOT_B, UNIT_TILE(r3) ; rollerbot tile
+            jmp checkForWindowRedraw  ;call:return
+        20$:
+            movb #TILE_ROLLERBOT_A, UNIT_TILE(r3) ; rollerbot tile
+            jmp checkForWindowRedraw  ;call:return
+
+
+pistolFireUp:
+  ; Check if it has reached limits.
+    tstb UNIT_A(r3)
+    bnz 10$
+      ; if it has reached max range, then it vanishes.
+        call deactivateWeapon
+        jmp ailpCheckForWindowRedraw
+    10$:
+        decb UNIT_LOC_Y(r3) ; move it up one.
+        br pistolAiCommon
+
+pistolFireDown:
+  ; Check if it has reached limits.
+    tstb UNIT_A(r3)
+    bnz 10$
+      ; if it has reached max range, then it vanishes.
+        call deactivateWeapon
+        jmp ailpCheckForWindowRedraw
+    10$:
+        incb UNIT_LOC_Y(r3) ; move it down one.
+        br pistolAiCommon
+
+pistolFireLeft:
+  ; Check if it has reached limits.
+    tstb UNIT_A(r3)
+    bnz 10$
+      ; if it has reached max range, then it vanishes.
+        call deactivateWeapon
+        jmp ailpCheckForWindowRedraw
+    10$:
+        decb UNIT_LOC_X(r3) ; move it down one.
+        br pistolAiCommon
+
+pistolFireRight:
+  ; Check if it has reached limits.
+    tstb UNIT_A(r3)
+    bnz 10$
+      ; if it has reached max range, then it vanishes.
+        call deactivateWeapon
+        jmp ailpCheckForWindowRedraw
+    10$:
+        incb UNIT_LOC_X(r3) ; move it down one.
+        br pistolAiCommon
+
+deactivateWeapon:
+    clrb UNIT_TYPE(r3)
+    cmpb UNIT_B(r3), #1
+    bnz 1237$
+        clrb UNIT_B(r3)
+        clr PLASMA_ACT
+1237$: return
+
+pistolAiCommon:
+    tstb UNIT_B(r3) ; is it pistol or plasma?
+    bnz plasmaAiCommon
+        decb UNIT_A(r3) ; reduce range by one
+      ; Now check what map object it is on.
+        mov UNIT_LOC_X(r3), r1
+        mov UNIT_LOC_Y(r3), r2
+        call getTileFromMap
+        cmpb r0, #TILE_CANNISTER ; explosive cannister
+        bne 10$ ; uses A further
+          ; hit an explosive cannister
+            movb #TILE_BLOWN_CANNISTER, (r5)    ; Blown cannister
+            movb #AI_BOMB, UNIT_TYPE(r3)        ; bomb AI
+            movb #TILE_CANNISTER, UNIT_TILE(r3) ; Cannister tile
+            ; ld hl,UNIT_LOC_X
+            ; call unit_abs_x
+            ; ld a,(MAP_X)
+            ; ld (hl),a
+            ; ld hl,UNIT_LOC_Y
+            ; call unit_abs_x
+            ; ld a,(MAP_Y)
+            ; ld (hl),a
+
+            movb #5, UNIT_TIMER_A(r3) ; How long until exposion?
+            clrb UNIT_A(R3)
+            jmp aiLoop
+
+        10$:
+            bitb TILE_ATTRIB(r3), 0b00010000 ; can see through tile?
+            bnz hit_something
+               ;mov #SND_WALL_HIT, r0
+               ;call playSound
+              ; Hit object that can't pass through, convert to explosion
+                movb #11, UNIT_TYPE(r3)  ; small explosion
+                movb #248, UNIT_TILE(r3) ; first tile for explosion
+                jmp ailpCheckForWindowRedraw
+            hit_something:
+              ; check if it encountered a robot/human
+                call checkForUnit
+                bpl hit_unit
+                    jmp ailpCheckForWindowRedraw ; no unit encountered
+                hit_unit:
+                  ; struck a robot/human
+                    movb #AI_SMALL_EXPLOSION, UNIT_TYPE(r3) ; small explosion
+                    movb #248, UNIT_TILE(r3)                ; first tile for explosion
+                    mov #1, r4 ; set damage for pistol
+                    call inflictDamage
+                    call alterAi
+                    jmp ailpCheckForWindowRedraw
+
+plasmaAiCommon:
+jmp aiLoop
+
+; This routine checks to see if the robot being shot is a hoverbot,
+; if so it will alter it's AI to attack mode.
+; in: r0 = unit number
+alterAi:
+    cmp r0, #AI_DROID_LEFT_RIGHT  ; hoverbot left/right
+    beq switch_to_attack_mode
+        cmp r0, #AI_DROID_UP_DOWN ; hoverbot UP/DOWN
+        beq switch_to_attack_mode
+            return
+    switch_to_attack_mode:
+        movb #AI_HOVER_ATTACK, UNIT_TYPE(r3) ; Attack AI
+        return
+
+; This routine will inflict damage on whatever is defined in R0 in the amount set in R3.
+; If the damage is more than the health of that unit, it will delete the unit.
+; in: r4 = damage amount
+inflictDamage:
+    tst r0
+    bze inflict_damage_to_the_player
+      ; inflict damage to a unit
+        movb UNIT_HEALTH(r3), r5
+        sub r4, r5
+        blos unit_killed
+            ; mov #SND_ROBOT_HIT
+            ; jmp playSoundD ; call:return
+            return
+        unit_killed:
+            clrb UNIT_HEALTH(r3)
+            cmpb UNIT_TYPE(r3), #AI_DEAD_ROBOT ; is it a dead robot already?
+            beq unit_already_dead
+                movb #DEAD_ROBOT_TIMEOUT, UNIT_TIMER_A
+                movb #TILE_DEAD_ROBOT, UNIT_TILE(r3) ; dead robot tile
+                ; mov #SND_ROBOT_DOWN
+                ; jmp playSoundD ; call:return
+                return
+            unit_already_dead:
+                ; mov #SND_WALL_HIT
+                ; jmp playSoundD ; call:return
+                return
+
+    inflict_damage_to_the_player:
+        tstb UNIT_HEALTH
+        bnz 10$
+            return ; don't hurt killed player
+        10$:
+            call createPlayerExplosion
+            call calculateAndRedraw
+            call drawMapWindow
+            call drawBuffer
+
+            tstb UNIT_HEALTH
+            bze 20$
+                ; mov #SND_ELECTRIC, r0
+                br 30$
+            20$:
+                ; mov #SND_PLAYER_DOWN, r0
+            30$:
+                ; call playSound
+
+                movb UNIT_HEALTH, r0
+                sub r4, r0
+                blos player_down
+                    movb r0, UNIT_HEALTH
+                    mov #10, BORDER_FLASH
+                    jmp displayPlayerHealth ; call:return
+                player_down:
+                    clrb UNIT_HEALTH
+                    clrb UNIT_TYPE
+                    ; mov #SND_PLAYER_DOWN, r0
+                    ; call playSound
+                    call displayPlayerHealth
+                    jmp drawBuffer ; call:return
+
+
+smallExplosion:
+    clrb UNIT_TIMER_A(r3)
+    incb UNIT_TILE(r3)
+    cmpb UNIT_TILE(r3), #251 ; last tile for explosion
+    bhi 10$
+        jmp ailpCheckForWindowRedraw
+    10$:
+        clrb UNIT_TYPE(r3)
+        jmp ailpCheckForWindowRedraw
+
+
+createPlayerExplosion:
+    mov #28, r0
+    10$:
+        tstb UNIT_TYPE(r0)
+        bze 20$
+            inc r0
+            cmp r0, #32 ; max unit for weaponsfire
+    bne 10$
+        return
+
+    20$:
+        movb #AI_SMALL_EXPLOSION, UNIT_TYPE(r0) ; Small explosion AI type
+        movb #248, UNIT_TILE(r0)                ; first tile for explosion
+        movb #1, UNIT_TIMER_A(r0)
+        movb UNIT_LOC_X, UNIT_LOC_X(r0)
+        movb UNIT_LOC_Y, UNIT_LOC_Y(r0)
+        return
+

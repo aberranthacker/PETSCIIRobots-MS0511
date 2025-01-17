@@ -1,23 +1,22 @@
-VblankIntHandler: ;-------------------------------------------------------------
-        PUSH @#PBPADR, R5, R4, R3, R2, R1, R0
+vblankIntHandler: ;-------------------------------------------------------------
+        push @#PBPADR, r5, r4, r3, r2, r1, r0
 
     .ifdef DEBUG
        ;CALL @#PrintDebugInfo
     .endif
 
        .equiv MusicPlayerAddr, .+2
-        CALL @#SubroutineStub
+        call @#subroutineStub
 
-VblankIntHandler_Finalize:
-        POP R0, R1, R2, R3, R4, R5, @#PBPADR
+        pop r0, r1, r2, r3, r4, r5, @#PBPADR
 
-VblankIntHandler.Minimal:
+vblankIntHandler.minimal:
       ; small piece of firware code to stop floppy disk drive
-        TST  @#07130 ; is floppy disk drive timer active?
-        BZE  1271$   ; no, do nothing
-        DEC  @#07130 ; decrease timer counter
-        BNZ  1271$   ; do nothing, unless the counter reached 0
-        CALL @07132  ; stop floppy disk drive
+        tst @#07130 ; is floppy disk drive timer active?
+        bze 1271$   ; no, do nothing
+        dec @#07130 ; decrease timer counter
+        bnz 1271$   ; do nothing, unless the counter reached 0
+        call @07132 ; stop floppy disk drive
 
-1271$:  RTI
+1271$:  rti
 ;-------------------------------------------------------------------------------

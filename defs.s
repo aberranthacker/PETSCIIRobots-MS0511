@@ -8,7 +8,8 @@
     .equiv DETECT_ABERRANT_SOUND_MODULE, 1
 .endif
 ;.equiv DOUBLED_LINES, 1
-; .equiv PREVENT_SIGN_EXTENSION, 1
+;.equiv PREVENT_SIGN_EXTENSION, 1
+.equiv COLOR_TILES, 1
 ;===============================================================================
 .equiv PPU.loadDiskFile,      0*2
 .equiv PPU.SetPalette,        1*2
@@ -43,8 +44,13 @@
 .equiv KEYBOARD_SCANNER, 054
 .equiv PPU_KeyboardScanner, KEYBOARD_SCANNER/2
 
-.equiv FB, 0600 ; 0384 0x0180
-.equiv FB_END, FB + LINE_WIDTHB * MAIN_SCREEN_LINES_COUNT
+.ifdef COLOR_TILES
+    .equiv FB, 65536 ; 0344*2
+    .equiv FB_END, 512 + LINE_WIDTHB * MAIN_SCREEN_LINES_COUNT
+.else
+    .equiv FB, 0600
+    .equiv FB_END, FB + LINE_WIDTHB * MAIN_SCREEN_LINES_COUNT
+.endif
 
 .equiv PPU_MODULE_LOADING_ADDR, FB_END
 .equiv LEVEL_MAP, FB_END
@@ -159,7 +165,11 @@
 .equiv DECB_R3_OPCODE, 0105303
 .equiv MOVB_R3_R3_OPCODE, 0110303
 
-.equiv KEYMAP_RIGHT,  0x08
-.equiv KEYMAP_LEFT,   0x04
-.equiv KEYMAP_DOWN,   0x02
-.equiv KEYMAP_UP,     0x01
+.equiv KEYMAP_FIRE_RIGHT, 0x0080
+.equiv KEYMAP_FIRE_LEFT,  0x0040
+.equiv KEYMAP_FIRE_DOWN,  0x0020
+.equiv KEYMAP_FIRE_UP,    0x0010
+.equiv KEYMAP_RIGHT,      0x0008
+.equiv KEYMAP_LEFT,       0x0004
+.equiv KEYMAP_DOWN,       0x0002
+.equiv KEYMAP_UP,         0x0001
