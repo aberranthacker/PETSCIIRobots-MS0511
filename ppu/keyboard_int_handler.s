@@ -45,37 +45,37 @@ keyboardIntHadler: ;------------------------------------------------------------
     rti
 ;-------------------------------------------------------------------------------
 KEY_PRESSES_SCANCODES:
-     0$: .byte UP_PRESSED
-     1$: .byte DOWN_PRESSED
-     2$: .byte LEFT_PRESSED
-     3$: .byte RIGHT_PRESSED
-     4$: .byte RETURN_PRESSED
-     5$: .byte KEYPAD_RETURN_PRESSED
-     6$: .byte C_PRESSED
-     7$: .byte Y_PRESSED
-     8$: .byte F_PRESSED
-     9$: .byte W_PRESSED
-    10$: .byte J_PRESSED
-    11$: .byte U_PRESSED
+     0$: .byte UP_PRESSED    ; walk up
+     1$: .byte DOWN_PRESSED  ; walk down
+     2$: .byte LEFT_PRESSED  ; walk left
+     3$: .byte RIGHT_PRESSED ; walk right
+     4$: .byte C_PRESSED     ; fire up
+     5$: .byte Y_PRESSED     ; fire down
+     6$: .byte F_PRESSED     ; fire left
+     7$: .byte W_PRESSED     ; fire right
+     8$: .byte 0
+     9$: .byte J_PRESSED
+    10$: .byte U_PRESSED
+    11$: .byte 0
     12$: .byte 0
     13$: .byte 0
     14$: .byte 0
-    15$: .byte 0
+    15$: .byte RETURN_PRESSED
 
 KEY_RELEASES_SCANCODES:
      0$: .byte UP_RELEASED
      1$: .byte DOWN_RELEASED
      2$: .byte LEFT_RELEASED
      3$: .byte RIGHT_RELEASED
-     4$: .byte RETURN_RELEASED
-     5$: .byte KEYPAD_RETURN_RELEASED
-     6$: .byte C_RELEASED ; fire up
-     7$: .byte Y_RELEASED ; fire down
-     8$: .byte F_RELEASED ; fire left
-     9$: .byte W_RELEASED ; fire right
-    10$: .byte J_RELEASED ; cycle weapons
-    11$: .byte U_RELEASED ; cycle items
-    12$: .byte 0 ; search
-    13$: .byte 0 ; use
-    14$: .byte 0 ; exit
-    15$: .byte 0
+     4$: .byte C_RELEASED
+     5$: .byte Y_RELEASED
+     6$: .byte F_RELEASED
+     7$: .byte W_RELEASED
+     8$: .byte 0
+     9$: .byte J_RELEASED ; cycle weapons
+    10$: .byte U_RELEASED ; cycle items
+    11$: .byte 0 ; search
+    12$: .byte 0 ; use
+    13$: .byte 0 ; exit
+    14$: .byte 0
+    15$: .byte RETURN_RELEASED

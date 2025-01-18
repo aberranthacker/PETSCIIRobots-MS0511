@@ -135,9 +135,28 @@ start:
         bit #KEYMAP_FIRE_UP, r0
         bze checkKbdFireDown
             bic #KEYMAP_FIRE_UP, KEYBOARD_SCANNER
-            ; call fireUp
+            call fireUp
             jmp mainGameLoop
     checkKbdFireDown:
+        bit #KEYMAP_FIRE_DOWN, r0
+        bze checkKbdFireLeft
+            bic #KEYMAP_FIRE_DOWN, KEYBOARD_SCANNER
+            call fireDown
+            jmp mainGameLoop
+    checkKbdFireLeft:
+        bit #KEYMAP_FIRE_LEFT, r0
+        bze checkKbdFireRight
+            bic #KEYMAP_FIRE_LEFT, KEYBOARD_SCANNER
+            call fireLeft
+            jmp mainGameLoop
+    checkKbdFireRight:
+        bit #KEYMAP_FIRE_RIGHT, r0
+        bze checkKbdCycleWeapons
+            bic #KEYMAP_FIRE_RIGHT, KEYBOARD_SCANNER
+            call fireRight
+            jmp mainGameLoop
+    checkKbdCycleWeapons:
+
             jmp mainGameLoop
 
 
@@ -390,7 +409,7 @@ requestWalkUp:
             bpl moveNotAllowed ; unit on the way
                 decb UNIT_LOC_Y(r3)
                 mov #TRUE, r0
-return
+                return
 
 ; in: r3 = unit number
 requestWalkDown:
@@ -420,7 +439,6 @@ requestWalkLeft:
     cmpb r0, #5
     beq moveNotAllowed
         dec r1
-
         movb UNIT_LOC_Y(r3), r2
         call getTileFromMap ; stores tile idx into r0
         bitb MOVE_TYPE, TILE_ATTRIB(r0)
@@ -429,7 +447,7 @@ requestWalkLeft:
             bpl moveNotAllowed ; unit on the way
                 decb UNIT_LOC_X(r3)
                 mov #TRUE, r0
-return
+                return
 
 ; in: r3 = unit number
 requestWalkRight:
@@ -446,7 +464,7 @@ requestWalkRight:
             bpl moveNotAllowed ; unit on the way
                 incb UNIT_LOC_X(r3)
                 mov #TRUE, r0
-return
+                return
 
 afterMove:
                               ; ;ld a, (MOVE_RESULT)
@@ -537,6 +555,119 @@ getTileFromMap:
     clr r0
     bisb (r5), r0
 return
+
+fireUp:
+    tst SELECTED_WEAPON
+    bze 1237$
+        cmp SELECTED_WEAPON, #ID_PISTOL
+        bne fireUpPlasma
+          ; Fire up pistol
+            tst AMMO_PISTOL
+            bze 1237$
+                call fireSearchSlot
+                bnz 1237$
+                    mov #DATA_FIRE_UP_PISTOL, r1
+                    jmp afterFire
+1237$: return
+
+fireDown:
+    tst SELECTED_WEAPON
+    bze 1237$
+        cmp SELECTED_WEAPON, #ID_PISTOL
+        bne fireDownPlasma
+          ; Fire down pistol
+            tst AMMO_PISTOL
+            bze 1237$
+                call fireSearchSlot
+                bnz 1237$
+                    mov #DATA_FIRE_DOWN_PISTOL, r1
+                    jmp afterFire
+1237$: return
+
+fireLeft:
+    tst SELECTED_WEAPON
+    bze 1237$
+        cmp SELECTED_WEAPON, #ID_PISTOL
+        bne fireLeftPlasma
+          ; Fire left pistol
+            tst AMMO_PISTOL
+            bze 1237$
+                call fireSearchSlot
+                bnz 1237$
+                    mov #DATA_FIRE_LEFT_PISTOL, r1
+                    jmp afterFire
+1237$: return
+
+fireRight:
+    tst SELECTED_WEAPON
+    bze 1237$
+        cmp SELECTED_WEAPON, #ID_PISTOL
+        bne fireRightPlasma
+          ; Fire right pistol
+            tst AMMO_PISTOL
+            bze 1237$
+                call fireSearchSlot
+                bnz 1237$
+                    mov #DATA_FIRE_RIGHT_PISTOL, r1
+                    jmp afterFire
+1237$: return
+
+fireUpPlasma:
+return
+fireDownPlasma:
+return
+fireLeftPlasma:
+return
+fireRightPlasma:
+return
+
+fireSearchSlot:
+    mov #28, r3
+    mov #UNIT_TYPE+28, r5
+    10$:
+        tstb (r5)
+        bze 1237$ ; slot found, return Z flag
+            inc r5
+            inc r3
+            cmp r3, #32
+            bne 10$
+        clz ; slot not found, flip Z to NZ
+1237$: return
+
+
+afterFire:
+    movb (r1)+, UNIT_TYPE(r3)
+    movb (r1)+, UNIT_TILE(r3)
+    movb (r1)+, UNIT_A(r3)
+    movb (r1), UNIT_B(r3)
+    movb (r1), PLASMA_ACT
+    clrb UNIT_TIMER_A(r3)
+    movb UNIT_LOC_X, UNIT_LOC_X(r3)
+    movb UNIT_LOC_Y, UNIT_LOC_Y(r3)
+    mov r3, UNIT
+    cmp SELECTED_WEAPON, #ID_PLASMA_GUN
+    beq af.plasma_selected
+          ; mov #SND_PISTOL, r0
+          ; call playSound
+            dec AMMO_PISTOL
+            jmp displayWeapon
+    af.plasma_selected:
+          ; mov #SND_PLASMAGUN, r0
+          ; call playSound
+            dec AMMO_PLASMA
+            jmp displayWeapon
+
+; Fire type data blocks
+; AI routine ID, tile number, travel distance, weapon type
+DATA_FIRE_UP_PISTOL:    .byte 12, 244, 10/2, 0
+DATA_FIRE_UP_PLASMA:    .byte 12, 240, 10/2, 1
+DATA_FIRE_DOWN_PISTOL:  .byte 13, 244, 10/2, 0
+DATA_FIRE_DOWN_PLASMA:  .byte 13, 240, 10/2, 1
+DATA_FIRE_LEFT_PISTOL:  .byte 14, 245, 10/2, 0
+DATA_FIRE_LEFT_PLASMA:  .byte 14, 241, 10/2, 1
+DATA_FIRE_RIGHT_PISTOL: .byte 15, 245, 10/2, 0
+DATA_FIRE_RIGHT_PLASMA: .byte 15, 241, 10/2, 1
+
 
     .include "init_game.s"
     .include "background_tasks.s"

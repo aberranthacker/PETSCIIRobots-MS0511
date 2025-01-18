@@ -18,3 +18,6 @@ The port is in early stage of development.
 - [Neovim](https://neovim.io/) with [tree-sitter-vm2](https://github.com/aberranthacker/tree-sitter-vm2)
 parser for [nvim-treesitter](https://github.com/nvim-treesitter/nvim-treesitter)
 - [ukncbtl-qt](https://github.com/nzeemin/ukncbtl-qt)
+- [Tiled](http://www.mapeditor.org/)
+- [Aseprite](https://www.aseprite.org/)
+
