@@ -7,8 +7,7 @@ ssy_init:
         mov #music_channels_vars_sizew, r0
         mov #music_channels_vars, r1
         10$:
-            ; clr (r1)+
-            nop
+            clr (r1)+
         sob r0, 10$
 
         call ssy_adlib_init
@@ -77,9 +76,9 @@ ssy_music_play:
         bze 1237$
 
       ; Clear all music channel vars
-        mov #1, r1
-        mov #2, r2
-        mov #10, r3
+        mov #1, r1    ; music channels start from 1
+        mov #2, r2    ; word offset
+        mov #OPL2_INSTRUMENT_REGS_PER_CHANNEL, r3 ; OPL_REGS and OPL_PREV offset
         10$:
             clrb WAIT(r1)
             clr RET(r2)
@@ -98,10 +97,10 @@ ssy_music_play:
                 clrb OPL_REGS(r0)
                 clrb OPL_PREV(r0)
             inc r4
-            cmp r4, #10
+            cmp r4, #OPL2_INSTRUMENT_REGS_PER_CHANNEL
             blo 20$
 
-        add #10, r3
+        add #OPL2_INSTRUMENT_REGS_PER_CHANNEL, r3
         inc r2
         inc r2
         inc r1
@@ -121,11 +120,11 @@ ssy_music_play:
         30$:
             mov r2, r3
             add r5, r3
-            mov (r3),r3 ; read channel offset
-            add r5, r3  ; calculate channel pointer
+            mov (r3),r3        ; read channel offset
+            add r5, r3         ; calculate channel pointer
             mov r3, PTR(r2)
             mov r3, LOOP(r2)
-            movb #0xFF, VOLPREV(r1)
+            movb #0xFF, VOLPREV(r1) ; force volume update
             inc r1
             inc r2
             inc r2
@@ -151,7 +150,7 @@ ssy_timer_isr:                                  ; void ssy_timer_isr(){
         tstb WAIT(r1)
         bze no_wait
 
-        dec WAIT(r1)
+        decb WAIT(r1)
         bze no_wait
 
         jmp next_channel
@@ -319,7 +318,8 @@ ssy_timer_isr:                                  ; void ssy_timer_isr(){
             bisb @PTR+1(r2), r0
             swab r0
             bisb @PTR(r2), r0
-            add SSY_MUSIC, r0
+           .equiv SSY_MUSIC, .+2 ; Pointer to start of current music being played
+            add #0, r0
             mov r0, PTR(r2)
             mov PTR(r2), REFPREV(r2)       ;     REFPREV[channel] = PTR[channel];
 
@@ -355,16 +355,19 @@ ssy_timer_isr:                                  ; void ssy_timer_isr(){
         tstb SOUND_TIMER
         bze 1237$
 
-        dec SOUND_TIMER
+       .equiv SOUND_TIMER, .+2 ; The countdown timer for the current sound being played,
+        dec #0                 ; before it can be interrupted by a lower priority sound
         bnz 1237$
 
-        clrb SOUND_PRIORITY
-
+        clrb SOUND_PRIORITY ; The current playing sound's priority level.
+                            ; This resets to 0 when the sound is finished playing.
 1237$:  return ; ssy_timer_isr
+SOUND_PRIORITY: .word 0
 
 ssy_adlib_update:
       ; Check which channels and how many channels needs to be updated depending
       ; on the assigned devices
+      ;:bpt
         clr r1 ; byte index                              ; channel = 0;
         clr r2 ; word index                              ; channel_max = CH_MAX;
         clr r3 ; tens of bytes index
@@ -399,7 +402,7 @@ ssy_adlib_update:
                     call ssy_adlib_write
                 20$:
             inc r0
-            cmp r0, #10
+            cmp r0, #OPL2_INSTRUMENT_REGS_PER_CHANNEL
             blo loop_through_registers
 
           ; Send pitch if it has changed
@@ -417,10 +420,11 @@ ssy_adlib_update:
                 movb PITCH_2+1(r2), r5
                 call ssy_adlib_write
             30$:
-        add #10, r3
+        add #OPL2_INSTRUMENT_REGS_PER_CHANNEL, r3
         inc r2
         inc r2
         inc r1
+        ;:bpt
         cmp r1, #CH_MAX
         blo ssy_adlib_update_next_channel
 
@@ -428,11 +432,17 @@ ssy_adlib_update:
 
 ssy_adlib_write: ; void ssy_adlib_write(uint8_t regnum, uint8_t regval)
       ; r4 = regnum, r5 = regval
-        movb r4, @#ADLIB_PORT_ADDR
-        mov  r5, @#ADLIB_PORT_ADDR
+        movb r4, @#ASM_OPL2
+        nop
+        mov  r5, @#ASM_OPL2
+        nop
+        nop
+        nop
+        nop
+        nop
 return
 
-.equiv ADLIB_PORT_ADDR, STUB_REGISTER
+.equiv ASM_OPL2, STUB_REGISTER
 .equiv CH_MAX, 9
 .equiv music_channels_vars_size, music_channels_vars_to_zero_end - music_channels_vars
 .equiv music_channels_vars_sizew, music_channels_vars_size / 2
@@ -452,18 +462,12 @@ music_channels_vars:
     KEYOFF:  .ds.b CH_MAX ; Op12 keyoff flag
     VOLOPL:  .ds.b CH_MAX ; Op12 specific volume (more bits and extra data)
 
-   .equiv OPL_REGS_PER_CHANNEL, 10
-    OPL_REGS: .ds.b CH_MAX * OPL_REGS_PER_CHANNEL
-    OPL_PREV: .ds.b CH_MAX * OPL_REGS_PER_CHANNEL
+   .equiv OPL2_INSTRUMENT_REGS_PER_CHANNEL, 10
+    OPL_REGS: .ds.b CH_MAX * OPL2_INSTRUMENT_REGS_PER_CHANNEL
+    OPL_PREV: .ds.b CH_MAX * OPL2_INSTRUMENT_REGS_PER_CHANNEL
 music_channels_vars_to_zero_end:
 
-SSY_MUSIC:    .word 0 ; Pointer to start of current music being played
 SSY_CHANNELS: .word 0 ; Number of active data streams
-
-SOUND_PRIORITY: .byte 0 ; The current playing sound's priority level.
-                        ; This resets to 0 when the sound is finished playing.
-SOUND_TIMER:    .byte 0 ; The countdown timer for the current sound being played,
-                        ; before it can be interrupted by a lower priority sound
 
 SSY_OPL2_OPERATOR_ORDER:
     .byte 0x00, 0x01, 0x02, 0x08, 0x09, 0x0A, 0x10, 0x11, 0x12
@@ -521,6 +525,6 @@ SOUND_PLAY_TIMER:
 
 MUSIC:
     ; .incbin "sound/Metal Heads.adl"
-    ; .incbin "sound/All Clear!.adl"
+    .incbin "sound/All Clear!.adl"
     ; .incbin "sound/End of the Line.adl"
     .even
