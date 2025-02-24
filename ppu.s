@@ -102,9 +102,10 @@ start:
                 .endif
         pop @#4
     .endif
-        mov #trap4Handler, @#04
+        mov #trap4Handler,  @#04
         mov #trap10Handler, @#010
         mov #trap24Handler, @#024
+        call ssy_init
 
         MOV @#023166, rseed1 ; set cursor presence counter value as random seed
 
@@ -113,7 +114,6 @@ start:
       ; inform loader that PPU is ready to receive commands
         MOV #CPU_PPUCommandArg, @#PBPADR
         CLR @#PBP12D
-
 ;-------------------------------------------------------------------------------
 Queue_Loop:
         MOV @#CommandsQueue_CurrentPosition, R5
@@ -137,7 +137,7 @@ CommandsVectors:
         .word setPalette            ; PPU.SetPalette
         .word clearScreen           ; PPU.ClearScreen
         .word ssy_music_play
-        .word test_timer
+        .word setupTimerISR
 ;-------------------------------------------------------------------------------
 clearAuxScreen: ;------------------------------------------------------------{{{
     .if AUX_SCREEN_LINES_COUNT != 0
@@ -189,7 +189,7 @@ loadDiskFile: ; -------------------------------------------------------------{{{
         ror r0 ; prepare the address to be loaded into address register 0177010
         mov r0, @#023200 ; store params struct address for firmware subroutine
       ; firmware subroutine that handles floppy drive
-      ; it call programmable timer subroutine which uses value at 07050
+      ; (it calls programmable timer subroutine which uses value at 07050)
         call @#0131176
 
         wait_while_loading:
@@ -197,20 +197,33 @@ loadDiskFile: ; -------------------------------------------------------------{{{
         bmi wait_while_loading
 
         mov #vblankIntHandler, @#0100
+        call setupTimerISR
 1237$:  return
 ;----------------------------------------------------------------------------}}}
-test_timer: ; ---------------------------------------------------------------{{{
-        mov #3434, @#TMRBUF
-        mov #timer_sub, @#TMRINT
-        ;      76543210
-        mov #0b01000011, @#TMRST
+setupTimerISR: ; ------------------------------------------------------------{{{
+    clr @#TIMER_STATE_REG
+    mov #timerISR, @#TMRINT
+  ; 12-bits value to load into timer counter
+  ; 1 / (3434 * 4e-6) = 72.80139778683751 Hz
+    mov #3434, @#TIMER_BUFFER_REG
+  ; bit 6: enables timer interrupt
+  ; bits 2,1: define timer period (00: 2 μs, 01: 4 μs, 10: 8 μs, 11: 16 μs)
+  ; bit 0: starts the timer
+  ;        76543210
+    mov #0b01000011, @#TIMER_STATE_REG
     return
 
-
-timer_sub:
-        push @#PBPADR, r0, r1, r2, r3, r4, r5
+timerISR:
+    tst @#TIMER_CURRENT_VALUE_REG ; reading the register restarts the timer
+                                  ; counter if it has reached 0
+    tst @#TIMER_CURRENT_VALUE_REG ; read second time to ensure the timer counter
+                                  ; is properly restarted
+                                  ; (some timers are a bit slow)
+    mtps #PR7
+    push @#PADDR_REG, r0, r1, r2, r3, r4, r5
         call ssy_timer_isr
-        pop r5, r4, r3, r2, r1, r0, @#PBPADR
+    pop r5, r4, r3, r2, r1, r0, @#PADDR_REG
+    mtps #PR0
     rti
 ;----------------------------------------------------------------------------}}}
 ; Generates a 16-bit pseudorandom number using LSFR
