@@ -1,8 +1,8 @@
 
 ssy_init:
   ; Clear some vars
-    movb #1, SOUND_ENABLED
-    movb #1, SSY_CHANNELS
+    mov #1, SOUND_ENABLED
+    mov #1, SSY_CHANNELS
   ; Clear data and force OPL registers update
     mov #music_channels_vars_sizew, r0
     mov #music_channels_vars, r1
@@ -14,58 +14,58 @@ ssy_init:
 return ; ssy_init
 
 ssy_adlib_init:
-ssy_adlib_shut:               ; void ssy_adlib_shut(){
-    mov #0x01,r4              ;
+ssy_adlib_shut:                            ; void ssy_adlib_shut(){
+    mov #0x01,r4                           ;
     mov #0x20,r5
-    call ssy_adlib_write      ;     ssy_adlib_write(0x01, 0x20);
+    call ssy_adlib_write                   ;     ssy_adlib_write(0x01, 0x20);
 
     clr r5
-    mov #2,r4                 ;     for (i = 2; i < 0x20; i++){
+    mov #2,r4                              ;     for (i = 2; i < 0x20; i++){
     10$:
-        call ssy_adlib_write  ;         ssy_adlib_write(i, 0);
+        call ssy_adlib_write               ;         ssy_adlib_write(i, 0);
         inc r4
     cmp r4,#0x20
-    blo 10$                   ;     }
+    blo 10$                                ;     }
   ; r4 = 0x20
     mov #255,r5
-    20$:                      ;     for (i = 0x20; i < 0xA0; i++){
-        call ssy_adlib_write  ;         ssy_adlib_write(i, 255);
+    20$:                                   ;     for (i = 0x20; i < 0xA0; i++){
+        call ssy_adlib_write               ;         ssy_adlib_write(i, 255);
         inc r4
     cmp r4,#0xA0
-    blo 20$                   ;     }
+    blo 20$                                ;     }
   ; r4 = 0xA0
     clr r5
-    30$:                      ;     for (i = 0xA0; i < 0xF6; i++){
-        call ssy_adlib_write  ;         ssy_adlib_write(i, 0);
+    30$:                                   ;     for (i = 0xA0; i < 0xF6; i++){
+        call ssy_adlib_write               ;         ssy_adlib_write(i, 0);
         inc r4
     cmp r4,#0xF6
-    blo 30$                   ;     }
+    blo 30$                                ;     }
 
     mov #0xE0,r5
     clr r0
-    40$:                                     ;     for (i = 0; i < 9; i++){
+    40$:                                   ;     for (i = 0; i < 9; i++){
       ; Quick attack, longest decay
         movb SSY_OPL2_OPERATOR_ORDER(r0), r1
         mov r1,r4
         add #0x60,r4
-        call ssy_adlib_write                 ;         ssy_adlib_write(0x60 + SSY_OPL2_OPERATOR_ORDER[i], 0xE0);
+        call ssy_adlib_write               ;         ssy_adlib_write(0x60 + SSY_OPL2_OPERATOR_ORDER[i], 0xE0);
       ; The same for operator 1 and 2
         mov  r1, r4
         add #0x63,r4
-        call ssy_adlib_write                 ;         ssy_adlib_write(0x63 + SSY_OPL2_OPERATOR_ORDER[i], 0xE0);
+        call ssy_adlib_write               ;         ssy_adlib_write(0x63 + SSY_OPL2_OPERATOR_ORDER[i], 0xE0);
       ; Max sustain, quick release
         mov  r1,r4
         add #0x80,r4
-        call ssy_adlib_write                 ;         ssy_adlib_write(0x80 + SSY_OPL2_OPERATOR_ORDER[i], 0x0E);
+        call ssy_adlib_write               ;         ssy_adlib_write(0x80 + SSY_OPL2_OPERATOR_ORDER[i], 0x0E);
       ; These setting remain unchanged
         mov  r1,r4
         add #0x83,r4
-        call ssy_adlib_write                 ;         ssy_adlib_write(0x83 + SSY_OPL2_OPERATOR_ORDER[i], 0x0E);
+        call ssy_adlib_write               ;         ssy_adlib_write(0x83 + SSY_OPL2_OPERATOR_ORDER[i], 0x0E);
 
         inc r0
         cmp r0,#9
-    blo 40$                                  ;     }
-return ; ssy_adlib_shut                          ; }
+    blo 40$                                ;     }
+return ; ssy_adlib_shut                    ; }
 
 ssy_music_stop:
 return
@@ -104,9 +104,10 @@ ssy_music_play:
     bze 1237$
 
   ; Clear all music channel vars
-    mov #1, r1    ; music channels start from 1
-    mov #2, r2    ; word offset
-    mov #OPL2_INSTRUMENT_REGS_PER_CHANNEL, r3 ; OPL_REGS and OPL_PREV offset
+    mov #1, r1    ; current channel byte offset (music channels start from 1)
+    mov #2, r2    ; current channel word offset
+    mov #INSTRUMENT_REGS_PER_CHANNEL, r3 ; current channel 10th of bytes offset
+                                         ; (offset within OPL_REGS and OPL_PREV)
     10$:
         clr RET(r2)
         clr PTR(r2)
@@ -127,10 +128,10 @@ ssy_music_play:
             clrb OPL_REGS(r0)
             clrb OPL_PREV(r0)
         inc r4
-        cmp r4, #OPL2_INSTRUMENT_REGS_PER_CHANNEL
+        cmp r4, #INSTRUMENT_REGS_PER_CHANNEL
         blo 20$
 
-    add #OPL2_INSTRUMENT_REGS_PER_CHANNEL, r3
+    add #INSTRUMENT_REGS_PER_CHANNEL, r3
     inc r2
     inc r2
     inc r1
@@ -143,7 +144,7 @@ ssy_music_play:
   ; Read number of channels from music data
     movb 1(r5), r0
     inc r0                 ; add SFX channel to channels count
-    mov  r0, SSY_CHANNELS  ; store channels count
+    mov r0, SSY_CHANNELS  ; store channels count
 
   ; Set up music channels
     dec r0                 ; subtract SFX channel from channels count
@@ -176,6 +177,7 @@ ssy_timer_isr:
     process_channels:
         clr r1 ; channel, byte offset
         clr r2 ; channel, word offset
+        clr r3 ; channel, instrument registers offset
 
     process_channel:
         tstb WAIT(r1)
@@ -193,26 +195,26 @@ ssy_timer_isr:
         jmp next_channel
 
     update_channel_loop:
-        clr r3
-        bisb @PTR(r2), r3                  ; data = *(PTR[channel]);
+        clr r0
+        bisb @PTR(r2), r0                  ; data = *(PTR[channel]);
       ; Advance channel data pointer
         inc PTR(r2)                        ; PTR[channel]++;
 
         ; Check if the data is a wait value
-            cmpb r3, #0xC0                     ; if (data < 0xC0)
+            cmpb r0, #0xC0                     ; if (data < 0xC0)
             bhis check_if_data_is_volume_value
               ; Set channel wait value
-                movb r3, WAIT(r1)              ;     WAIT[channel] = data;
+                movb r0, WAIT(r1)              ;     WAIT[channel] = data;
                 jmp next_channel               ;     break
 
         check_if_data_is_volume_value:
-            cmpb r3, #0xD0                     ; else if (data < 0xD0)
+            cmpb r0, #0xD0                     ; else if (data < 0xD0)
             bhis check_if_data_pitch_1_lsb
               ; Set channel volume             ;     VOLUME[channel] = (data & 0x0F);
                 br update_channel_loop
 
         check_if_data_pitch_1_lsb:
-            cmpb r3, #0xD0                     ; else if (data = 0xD0)
+            cmpb r0, #0xD0                     ; else if (data = 0xD0)
             bne check_if_data_pitch_1_msb
               ; Set Pitch 1 LSB
                                                ;     PITCH_1[channel] &= 0xFF00;
@@ -221,7 +223,7 @@ ssy_timer_isr:
                 jmp next_channel               ;     break
 
         check_if_data_pitch_1_msb:
-            cmpb r3, #0xD1                     ; else if (data == 0xD1)
+            cmpb r0, #0xD1                     ; else if (data == 0xD1)
             bne check_if_data_pitch_1_word
               ; Set Pitch 1 MSB                ;     VOLUME[channel] = data;
                                                ;     PITCH_1[channel] &= 0x00FF;
@@ -230,7 +232,7 @@ ssy_timer_isr:
                 jmp next_channel               ;     break
 
         check_if_data_pitch_1_word:
-            cmpb r3, #0xD2                     ; else if (data == 0xD2)
+            cmpb r0, #0xD2                     ; else if (data == 0xD2)
             bne check_if_data_reference_short_pointer
               ; Set Pitch 1 Word               ;     VOLUME[channel] = data;
                 movb @PTR(r2), PITCH_1(r2)     ;     PITCH_1[channel] = (*(PTR[channel] + 1) << 8) | *(PTR[channel]);
@@ -239,21 +241,21 @@ ssy_timer_isr:
                 jmp next_channel               ;     break
 
         check_if_data_reference_short_pointer:
-            cmpb r3, #0xD3                     ; else if (data == 0xD3)
+            cmpb r0, #0xD3                     ; else if (data == 0xD3)
             bne check_if_data_pitch_2_lsb
               ; Read reference short pointer
-                clrb r3
-                bisb @PTR(r2), r3              ;     data = *(PTR[channel]);
+                clrb r0
+                bisb @PTR(r2), r0              ;     data = *(PTR[channel]);
                 inc PTR(r2)                    ;     PTR[channel]++;
                 mov PTR(r2), RET(r2)           ;     RET[channel] = PTR[channel];
-                inc r3
-                inc r3
-                sub r3, PTR(r2)                ;     PTR[channel] -= (2 + data);
+                inc r0
+                inc r0
+                sub r0, PTR(r2)                ;     PTR[channel] -= (2 + data);
                 mov PTR(r2), REFPREV(r2)       ;     REFPREV[channel] = PTR[channel];
                 br update_channel_loop
 
         check_if_data_pitch_2_lsb:
-            cmpb r3, #0xD4                     ; else if (data == 0xD4)
+            cmpb r0, #0xD4                     ; else if (data == 0xD4)
             bne check_if_data_pitch_2_msb
               ; Set Pitch 2 LSB
                                                ;     PITCH_2[channel] &= 0xFF00;
@@ -265,7 +267,7 @@ ssy_timer_isr:
                 jmp next_channel               ;     break
 
         check_if_data_pitch_2_msb:
-            cmpb r3, #0xD5                     ; else if (data == 0xD5)
+            cmpb r0, #0xD5                     ; else if (data == 0xD5)
             bne check_if_data_pitch_2_word
               ; Set Pitch 2 MSB
                                                ;     PITCH_2[channel] &= 0xFF00;
@@ -277,7 +279,7 @@ ssy_timer_isr:
                 br next_channel                ;     break
 
         check_if_data_pitch_2_word:
-            cmpb r3, #0xD6                     ; else if (data == 0xD6)
+            cmpb r0, #0xD6                     ; else if (data == 0xD6)
             bne check_if_data_reference_repeat
               ; Set Pitch 2 Word
                 movb @PTR(r2), PITCH_2(r2)     ;     PITCH_2[channel] = (*(PTR[channel] + 1) << 8) | *(PTR[channel]);
@@ -289,7 +291,7 @@ ssy_timer_isr:
                 br next_channel                ;     break
 
         check_if_data_reference_repeat:
-            cmpb r3, #0xD7                     ; else if (data == 0xD7)
+            cmpb r0, #0xD7                     ; else if (data == 0xD7)
             bne check_if_tandy_mode
               ; Read reference repeat
                 mov PTR(r2), RET(r2)           ;     RET[channel] = PTR[channel];
@@ -297,7 +299,7 @@ ssy_timer_isr:
                 br update_channel_loop
 
         check_if_tandy_mode:
-            cmpb r3, #0xD8                      ; else if (data == 0xD8)
+            cmpb r0, #0xD8                      ; else if (data == 0xD8)
             bne check_if_byte_to_write_to_virtual_CPL_register_array
               ; Set Tandy mode
               ; movb @PTR(r2), @#SSY_TANDY_MODE ;     SSY_TANDY_MODE = *(PTR[channel]);
@@ -305,19 +307,17 @@ ssy_timer_isr:
                 jmp update_channel_loop
 
         check_if_byte_to_write_to_virtual_CPL_register_array:
-            cmpb r3, #0xE3                     ; else if (data < 0xE3)
+            cmpb r0, #0xE3                     ; else if (data < 0xE3)
             bhis check_if_opl_volume_byte
               ; Write byte to virtual CPL register array
-                mov #OPL2_INSTRUMENT_REGS_PER_CHANNEL, r5  ; OPL_REGS[channel][data - 0xD9] = *(PTR[channel]);
-                mul r1, r5
-                add r3, r5
-                sub #0xD9, r5
-                movb @PTR(r2), OPL_REGS(r5)
+                sub #0xD9, r0                  ; OPL_REGS[channel][data - 0xD9] = *(PTR[channel]);
+                add r3, r0
+                movb @PTR(r2), OPL_REGS(r0)
                 inc PTR(r2)                    ;     PTR[channel]++;
                 jmp update_channel_loop
 
         check_if_opl_volume_byte:
-            cmpb r3, #0xE3                     ; else if (data == 0xE3)
+            cmpb r0, #0xE3                     ; else if (data == 0xE3)
             bne check_if_keyoff_to_a_non_zero_value
               ; Get volume byte
                 movb @PTR(r2), VOLOPL(r1)      ;     VOLOPL[channel] = *(PTR[channel]);
@@ -325,14 +325,14 @@ ssy_timer_isr:
                 jmp update_channel_loop
 
         check_if_keyoff_to_a_non_zero_value:
-            cmpb r3, #0xE4                     ; else if (data == 0xE4)
+            cmpb r0, #0xE4                     ; else if (data == 0xE4)
             bne check_if_return_from_reference_pointer
               ; Set keyoff to a non-zero value
-                movb r3, KEYOFF(r1)            ;     KEYOFF[channel] = data
+                movb r0, KEYOFF(r1)            ;     KEYOFF[channel] = data
                 jmp update_channel_loop
 
         check_if_return_from_reference_pointer:
-            cmpb r3, #0xFC                         ; else if (data == 0xFC)
+            cmpb r0, #0xFC                         ; else if (data == 0xFC)
             bne check_if_long_reference_call
               ; Return from reference pointer
                 tstb r1                            ;     if (channel == 0)
@@ -350,7 +350,7 @@ ssy_timer_isr:
                     jmp update_channel_loop
 
         check_if_long_reference_call:
-            cmpb r3, #0xFD                     ; else if (data == 0xFD)
+            cmpb r0, #0xFD                     ; else if (data == 0xFD)
             bne check_if_start_loop
               ; Call long reference
                 mov PTR(r2), RET(r2)           ;     RET[channel] = PTR[channel] + 2;
@@ -366,14 +366,14 @@ ssy_timer_isr:
                 jmp update_channel_loop
 
         check_if_start_loop:
-            cmpb r3, #0xFE                     ; else if (data == 0xFE)
+            cmpb r0, #0xFE                     ; else if (data == 0xFE)
             bne check_if_take_loop
               ; Start loop
                 mov PTR(r2), LOOP(r2)          ;     LOOP[channel] = PTR[channel];
                 jmp update_channel_loop
 
         check_if_take_loop:
-            cmpb r3, #0xFF                     ; else if (data == 0xFF)
+            cmpb r0, #0xFF                     ; else if (data == 0xFF)
             bne 10$
               ; Take loop
                 mov LOOP(r2), PTR(r2)          ;     PTR[channel] = LOOP[channel];
@@ -384,6 +384,7 @@ ssy_timer_isr:
         inc r1
         inc r2
         inc r2
+        add #INSTRUMENT_REGS_PER_CHANNEL, r3
         cmpb r1, SSY_CHANNELS
         bhis adlib_update
         jmp process_channel
@@ -407,72 +408,73 @@ ssy_adlib_update:
   ; Check which channels and how many channels needs to be updated depending
   ; on the assigned devices
     clr r1 ; byte index ; channel = 0
-    clr r2 ; word index                              ; channel_max = CH_MAX;
+    clr r2 ; word index                                   ; channel_max = CH_MAX;
     clr r3 ; tens of bytes index
-    ssy_adlib_update_next_channel:                   ; for (; channel < channel_max; channel++){
-        tstb KEYOFF(r1)                              ;         if (KEYOFF[channel] != 0){
+    ssy_adlib_update_next_channel:                        ; for (; channel < channel_max; channel++){
+        tstb KEYOFF(r1)                                   ;    if (KEYOFF[channel] != 0){
         bze update_volume_if_it_has_changed
-            clrb KEYOFF(r1)                          ;                 KEYOFF[channel] = 0;
-            mov r1, r4                               ;                 ssy_adlib_write(0xB0 + channel, 0);
+            clrb KEYOFF(r1)                               ;        KEYOFF[channel] = 0;
+            mov r1, r4                                    ;        ssy_adlib_write(0xB0 + channel, 0);
             add #0xB0, r4
             clr r5
             call ssy_adlib_write
 
         update_volume_if_it_has_changed:
-            cmpb VOLOPL(r1), VOLPREV(r1)                 ;         if (VOLOPL[channel] != VOLPREV[channel]){
+            cmpb VOLOPL(r1), VOLPREV(r1)                  ;    if (VOLOPL[channel] != VOLPREV[channel]){
             beq 10$
-                movb VOLOPL(r1), VOLPREV(r1)             ;                 VOLPREV[channel] = VOLOPL[channel];
-                movb SSY_OPL2_OPERATOR_ORDER(r1), r4     ;                 ssy_adlib_write(0x43 + SSY_OPL2_OPERATOR_ORDER[channel], VOLOPL[channel]);
+                movb VOLOPL(r1), VOLPREV(r1)              ;        VOLPREV[channel] = VOLOPL[channel];
+                movb SSY_OPL2_OPERATOR_ORDER(r1), r4      ;        ssy_adlib_write(0x43 + SSY_OPL2_OPERATOR_ORDER[channel], VOLOPL[channel]);
                 add #0x43, r4
                 movb VOLOPL(r1), r5
                 call ssy_adlib_write
             10$:
         ; Loop through registers and only update them if they have changed
             clr r0
-            loop_through_registers:                       ;         for (i = 0; i < 10; i++){
+            loop_through_registers:                       ;    for (i = 0; i < 10; i++){
                 mov r0, r5
                 add r3, r5
-                cmpb OPL_REGS(r5), OPL_PREV(r5)           ;                 if (OPL_REGS[channel][i] != OPL_PREV[channel][i]){
+                cmpb OPL_REGS(r5), OPL_PREV(r5)           ;        if (OPL_REGS[channel][i] != OPL_PREV[channel][i]){
                 beq 20$
-                    movb OPL_REGS(r5), OPL_PREV(r5)       ;                         OPL_PREV[channel][i] = OPL_REGS[channel][i];
-                    movb SSY_OPL2_INSTRUMENT_REGS(r5), r4 ;                         ssy_adlib_write(SSY_OPL2_INSTRUMENT_REGS[channel][i], OPL_REGS[channel][i]);
+                    movb OPL_REGS(r5), OPL_PREV(r5)       ;            OPL_PREV[channel][i] = OPL_REGS[channel][i];
+                    movb SSY_OPL2_INSTRUMENT_REGS(r5), r4 ;            ssy_adlib_write(SSY_OPL2_INSTRUMENT_REGS[channel][i], OPL_REGS[channel][i]);
                     movb OPL_REGS(r5), r5
                     call ssy_adlib_write
                 20$:
             inc r0
-            cmp r0, #OPL2_INSTRUMENT_REGS_PER_CHANNEL
+            cmp r0, #INSTRUMENT_REGS_PER_CHANNEL
             blo loop_through_registers
 
         ; Send pitch if it has changed
-            cmp PITCH_2(r2), PITCH_1(r2)              ;         if (PITCH_2[channel] != PITCH_1[channel]){
+            cmp PITCH_2(r2), PITCH_1(r2)                  ;    if (PITCH_2[channel] != PITCH_1[channel]){
             beq 30$
-                mov PITCH_2(r2), PITCH_1(r2)          ;                 PITCH_1[channel] = PITCH_2[channel];
+                mov PITCH_2(r2), PITCH_1(r2)              ;        PITCH_1[channel] = PITCH_2[channel];
               ; Set pitch lsb
-                mov #0xA0, r4                         ;                 ssy_adlib_write(0xA0 + channel, PITCH_2[channel]);
+                mov #0xA0, r4                             ;        ssy_adlib_write(0xA0 + channel, PITCH_2[channel]);
                 add r1, r4
                 movb PITCH_2(r2), r5
                 call ssy_adlib_write
               ; Set pitch msb and key on, pitch change always does key on
-                mov #0xB0, r4                         ;                 ssy_adlib_write(0xB0 + channel, PITCH_2[channel] >> 8);
+                mov #0xB0, r4                             ;        ssy_adlib_write(0xB0 + channel, PITCH_2[channel] >> 8);
                 add r1, r4
+                swab r5
                 movb PITCH_2+1(r2), r5
                 call ssy_adlib_write
             30$:
-        add #OPL2_INSTRUMENT_REGS_PER_CHANNEL, r3
+        add #INSTRUMENT_REGS_PER_CHANNEL, r3
         inc r2
         inc r2
         inc r1
         cmp r1, #CH_MAX
     blo ssy_adlib_update_next_channel
 
-1237$:  return
+return
 
-ssy_adlib_write: ; void ssy_adlib_write(uint8_t regnum, uint8_t regval)
+ssy_adlib_write:
   ; After writing to the register port, you must wait 12 cycles
   ; (3.4 μs at 3.58 MHz) before sending the data.
-  ; After writing the data, 84 (23.5 μs at 3.58MHz) cycles must elapse before
+  ; After writing the data, 84 cycles (23.5 μs at 3.58MHz) must elapse before
   ; any other sound card operation may be performed.
-  ; `nop` takes 16 external cycles min (2.56 μs)
+  ; `nop` takes at least 16 external cycles (2.56 μs)
   ;
   ; r4 = regnum, r5 = regval
     movb r4, @#ASM_OPL2
@@ -485,8 +487,8 @@ ssy_adlib_write: ; void ssy_adlib_write(uint8_t regnum, uint8_t regval)
     .endr
 return
 
-; .equiv ASM_OPL2, OPL2
-.equiv ASM_OPL2, STUB_REGISTER
+.equiv ASM_OPL2, OPL2
+; .equiv ASM_OPL2, STUB_REGISTER
 .equiv CH_MAX, 9
 .equiv music_channels_vars_size, music_channels_vars_to_zero_end - music_channels_vars
 .equiv music_channels_vars_sizew, music_channels_vars_size / 2
@@ -506,17 +508,19 @@ music_channels_vars:
     KEYOFF:  .ds.b CH_MAX ; Op12 keyoff flag
     VOLOPL:  .ds.b CH_MAX ; Op12 specific volume (more bits and extra data)
 
-   .equiv OPL2_INSTRUMENT_REGS_PER_CHANNEL, 10
-    OPL_REGS: .ds.b CH_MAX * OPL2_INSTRUMENT_REGS_PER_CHANNEL
-    OPL_PREV: .ds.b CH_MAX * OPL2_INSTRUMENT_REGS_PER_CHANNEL
+   .equiv INSTRUMENT_REGS_PER_CHANNEL, 10
+    OPL_REGS: .ds.b CH_MAX * INSTRUMENT_REGS_PER_CHANNEL
+    OPL_PREV: .ds.b CH_MAX * INSTRUMENT_REGS_PER_CHANNEL
 music_channels_vars_to_zero_end:
 
 SSY_CHANNELS: .word 0 ; Number of active data streams
 
 SSY_OPL2_OPERATOR_ORDER:
+    ;        0     1     2     4     4     5     6     7     8
     .byte 0x00, 0x01, 0x02, 0x08, 0x09, 0x0A, 0x10, 0x11, 0x12
 
 SSY_OPL2_INSTRUMENT_REGS:
+    ;        0     1     2     4     4     5     6     7     8     9
     .byte 0xC0, 0x20, 0x40, 0x60, 0x80, 0xE0, 0x63, 0x83, 0x23, 0xE3 ; channel 0
     .byte 0xC1, 0x21, 0x41, 0x61, 0x81, 0xE1, 0x64, 0x84, 0x24, 0xE4 ; channel 1
     .byte 0xC2, 0x22, 0x42, 0x62, 0x82, 0xE2, 0x65, 0x85, 0x25, 0xE5 ; channel 2
