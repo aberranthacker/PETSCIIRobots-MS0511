@@ -214,12 +214,12 @@ setupTimerISR: ; ------------------------------------------------------------{{{
     return
 
 timerISR:
+    mtps #PR7
     tst @#TIMER_CURRENT_VALUE_REG ; reading the register restarts the timer
                                   ; counter if it has reached 0
     tst @#TIMER_CURRENT_VALUE_REG ; read second time to ensure the timer counter
                                   ; is properly restarted
                                   ; (some timers are a bit slow)
-    mtps #PR7
     push @#PADDR_REG, r0, r1, r2, r3, r4, r5
         call ssy_timer_isr
     pop r5, r4, r3, r2, r1, r0, @#PADDR_REG
@@ -229,16 +229,17 @@ timerISR:
 ; Generates a 16-bit pseudorandom number using LSFR
 ; output: R0 - next pseudorandom number
 RandomWord:
-        .equiv rseed1, .+2
-        MOV #0, R0     ; load the current seed value into R0
-        ASL R0         ; double the value in R0
-        BHI 10$        ; branch if neither a carry nor a zero flags are set
-        ADD #39, R0
+    .equiv rseed1, .+2
+    mov #0, r0     ; load the current seed value into R0
+    asl r0         ; double the value in R0
+    bhi 10$        ; branch if neither a carry nor a zero flags are set
+        add #39, r0
     10$:
-        MOV R0, rseed1 ; store the new seed value back to rseed1
-        .equiv rseed2, .+2
-        ADD #0x9820, R0; add the secondary seed value to R0
-        MOV R0, rseed2 ; store the result back to rseed2
+    mov r0, rseed1 ; store the new seed value back to rseed1
+    .equiv rseed2, .+2
+    add #0x9820, r0; add the secondary seed value to R0
+    mov r0, rseed2 ; store the result back to rseed2
+    return
 
 subroutineStub:
     return
