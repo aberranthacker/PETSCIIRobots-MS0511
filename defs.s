@@ -10,6 +10,7 @@
 ;.equiv DOUBLED_LINES, 1
 ;.equiv PREVENT_SIGN_EXTENSION, 1
 .equiv COLOR_TILES, 1
+.equiv SPLIT_OPL2_PLAYER, 1
 ;===============================================================================
 .equiv PPU.loadDiskFile,      0*2
 .equiv PPU.SetPalette,        1*2
@@ -39,22 +40,25 @@
 ; CPU memory map ---------------------------------------------------------------
 .equiv INTERRUPT_HANDLER_STUB, 0  ; installed by bootsector
 .equiv SAVED_SP, 2                ; place to store SP if needed
-.equiv PPUCommandArg, 052 ; 38 0x26 command for PPU argument
+.equiv PPUCommandArg, 052         ; 42 0x2A command for PPU argument
 .equiv CPU_PPUCommandArg, PPUCommandArg/2
-.equiv KEYBOARD_SCANNER, 054
-.equiv PPU_KeyboardScanner, KEYBOARD_SCANNER/2
+.equiv KEYBOARD_SCANNER, 054      ; 44 0x2C
+.equiv OPL2_PROCS_TO_EXECUTE, 056 ; 46 0x2E
 
 .ifdef COLOR_TILES
     .equiv FB, 65536 ; 0344*2
     .equiv FB_END, 512 + LINE_WIDTHB * MAIN_SCREEN_LINES_COUNT
+    .equiv PPU_MODULE_LOADING_ADDR, 0600
+    .equiv LEVEL_MAP, 0600
+    .equiv TITLE_START, LEVEL_MAP
 .else
     .equiv FB, 0600
     .equiv FB_END, FB + LINE_WIDTHB * MAIN_SCREEN_LINES_COUNT
+    .equiv PPU_MODULE_LOADING_ADDR, FB_END
+    .equiv LEVEL_MAP, FB_END
+    .equiv TITLE_START, LEVEL_MAP
 .endif
 
-.equiv PPU_MODULE_LOADING_ADDR, FB_END
-.equiv LEVEL_MAP, FB_END
-.equiv TITLE_START, LEVEL_MAP
 
 .equiv LEVEL_MAP_SIZE, 8960
 
@@ -74,12 +78,19 @@
 ;-end of PPU memory map---------------------------------------------------------
 
 ; VRAM memory map --------------------------------------------------------------
-.equiv SLTAB, 0140000 ; 32768 0x8000 # bank 0
+; .equiv SLTAB, 0140000 ; 32768 0x8000 # bank 0
+.equiv SLTAB, 512 ; 32768 0x8000 # bank 0
 .equiv AUX_SCREEN_ADDR, 0160000 ; 49152 0xC000 # banks 0, 1 and 2
 ;-end of VRAM memory map--------------------------------------------------------
+.equiv COLOR_REGS_SEL, 0b100
+.equiv CURSOR_TOGGLE, 0b001
+.equiv GRAPHIC_CURSOR, 0x10
+.equiv TEXT_CURSOR,    0x00
+.equiv HRES_320, 0x10
 
 .equiv setCursorScalePalette, 0
-.equiv cursorGraphic, 0x10 ; 020 dummy parameter
+.equiv cursorGraphic, 0x10
+.equiv cursorText,    0x00
 .equiv scale640, 0x00
 .equiv scale320, 0x10
 .equiv scale160, 0x20

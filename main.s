@@ -31,12 +31,19 @@
        .global DIFFICULTY
        .global unZX0
 
+       .equiv MAIN_OPL2_CHANNELS_VARS, OPL2_CHANNELS_VARS
+       .global MAIN_OPL2_CHANNELS_VARS
+
        .=MAIN_START
 
 start:
     _unZX0 INTRO_TEXT, TEXT_BUFFER
     call drawBuffer
 
+    call ssy_init
+    mov #Channel1InIsr, @#CCH1_IN_INT
+    mov #0x40, @#CCH1_IN_STATE
+    tst @#CCH1_IN_DATA
   ; Main game loop starts here
     mov #SYSRQ, @#0100
     mtps #PR0
@@ -64,7 +71,7 @@ start:
                             ; call PLAY_SOUND_QUEUE_CLEAR
 
     mainGameLoop:
-            ; call PLAY_SOUND_QUEUE_PLAY      ;play delayed sound effects
+                                ; call PLAY_SOUND_QUEUE_PLAY      ;play delayed sound effects
         wait                    ; halt
                                 ; call PET_SCREEN_SHAKE
         call backgroundTasks    ; call BACKGROUND_TASKS
@@ -757,5 +764,8 @@ TILESET:
     .ifdef DEBUG
         .=TEXT_BUFFER_PREV + 1000
     .endif
+
+    .include "audio.s"
+    .include "channel_1_in_isr.s"
 
 end:

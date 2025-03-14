@@ -108,7 +108,8 @@ build/ppu.o : $(COMMON) \
               ppu/vblank_int_handler.s \
               ppu/keyboard_int_handler.s \
               ppu/puts.s \
-              audio.s \
+              audio/ppu_audio.s \
+              audio/vars.s \
 	      build/c64tileset.gfx
 	$(AS) ppu.s $(INCS) -al -o build/ppu.o | $(FORMAT_LIST)
 # ppu_module.bin ------------------------------------------------------------}}}

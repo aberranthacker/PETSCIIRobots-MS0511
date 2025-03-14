@@ -217,11 +217,11 @@ timerISR:
     mtps #PR7
     tst @#TIMER_CURRENT_VALUE_REG ; reading the register restarts the timer
                                   ; counter if it has reached 0
-    tst @#TIMER_CURRENT_VALUE_REG ; read second time to ensure the timer counter
+    bnz .-4                       ; read second time to ensure the timer counter
                                   ; is properly restarted
                                   ; (some timers are a bit slow)
     push @#PADDR_REG, r0, r1, r2, r3, r4, r5
-        call ssy_timer_isr
+        call ppu_timer_isr
     pop r5, r4, r3, r2, r1, r0, @#PADDR_REG
     mtps #PR0
     rti
@@ -260,9 +260,9 @@ PPU_INTERRUPT_VECTORS:
         .include "ppu/trap_4_int_handler.s"
         .include "ppu/vblank_int_handler.s"
         .include "ppu/puts.s"
-        .include "audio.s"
 
         .even
+        .include "audio/ppu_audio.s"
 
 CommandsQueue_Top:
         .ds 2*16
