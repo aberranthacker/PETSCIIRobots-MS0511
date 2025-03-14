@@ -21,6 +21,22 @@ SYSRQ:
         bze 30$
             dec BORDER_FLASH
         30$: ; SYSRQ3:
+
+       .equiv cursor_counter, .+2
+        inc #-1
+
+        mov cursor_counter, r0
+        asl r0
+        asl r0
+        swab r0
+        bic #0xFFF0, r0
+        .equiv sound_played, .+2
+        cmp r0, #-1
+        beq 40$
+            mov r0, sound_played
+            call ssy_sound_play
+        40$:
+
     pop r1, r0
 rti
 

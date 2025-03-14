@@ -102,9 +102,9 @@ initialLoader: ; 0216 140 0x8E
             movb (r0)+, r1
             bze loadPPUModule
             20$:
-                tstb @#TTY.Out.State
+                tstb @#TTY_OUT_STATE
             bpl 20$
-            mov r1, @#TTY.Out.Data
+            mov r1, @#TTY_OUT_DATA
         br 10$
 
 loadPPUModule:

@@ -226,6 +226,26 @@ timerISR:
     mtps #PR0
     rti
 ;----------------------------------------------------------------------------}}}
+; 16-bit LFSR Random Number Generator (Optimized)
+; PDP-11 Assembly
+; Seed must be non-zero (e.g., 0xACE1)
+; Uses R0 (state) and R1 (preloaded with 0xB400 tap mask)
+; Caller must initialize R1 with 0xB400 once
+
+next_random:
+    .equiv nrseed, .+2
+    mov #0xACE1, r0
+    clc            ; Clear carry for logical shift (fill high bit with 0)
+    ror r0         ; Shift R0 right: LSB → Carry, high bit ← 0
+    bcs xor_step   ; If Carry=1 (original LSB was 1), branch to XOR
+    mov r0, nrseed
+    return         ; Return if Carry=0
+xor_step:
+    mov #0xB400, r1
+    xor r1, r0     ; Apply feedback using tap mask in R1
+    mov r0, nrseed
+    return         ; Return
+
 ; Generates a 16-bit pseudorandom number using LSFR
 ; output: R0 - next pseudorandom number
 RandomWord:
@@ -252,16 +272,15 @@ PPU_INTERRUPT_VECTORS:
     .word 0300, 0304, 0310, 0314, 0320, 0324, 0330, 0334, 0340
     .word 0 ; terminator
 
-        .include "ppu/channel_0_in_int_handler.s"
-        .include "ppu/channel_1_in_int_handler.s"
+        .include "ppu/channel_0_in_isr.s"
+        .include "ppu/channel_1_in_isr.s"
         .include "ppu/errors_handler.s"
-        .include "ppu/keyboard_int_handler.s"
-        .include "ppu/set_palette.s"
-        .include "ppu/trap_4_int_handler.s"
-        .include "ppu/vblank_int_handler.s"
+        .include "ppu/keyboard_isr.s"
         .include "ppu/puts.s"
+        .include "ppu/set_palette.s"
+        .include "ppu/trap_4_isr.s"
+        .include "ppu/v_blank_isr.s"
 
-        .even
         .include "audio/ppu_audio.s"
 
 CommandsQueue_Top:
@@ -271,6 +290,5 @@ CommandsQueue_Bottom:
 WAKING_UP_STR:
         .asciz "Waking up the robots..."
         .even
-
 end:
         .nolist

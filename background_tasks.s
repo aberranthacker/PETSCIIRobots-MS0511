@@ -134,7 +134,7 @@ AI_ROUTINES_LUT:
        .word aiLoop ; timeBomb        ; UNIT_TYPE 06
        .word aiLoop ; transporterPad  ; UNIT_TYPE 07
        .word aiLoop ; deadRobot       ; UNIT_TYPE 08
-       .word aiLoop ; evilbot         ; UNIT_TYPE 09
+       .word aiLoop; evilbot                  ; UNIT_TYPE 09
        .word aiDoor                   ; UNIT_TYPE 10
        .word smallExplosion           ; UNIT_TYPE 11
        .word pistolFireUp             ; UNIT_TYPE 12
@@ -215,6 +215,8 @@ hoverbotAnimate:
     20$:
     movb #TILE_HOVERBOT_A, UNIT_TILE(r3)
     return
+
+    .include "background_tasks/evilbot.s"
 
 ; This routine handles automatic sliding doors.
 ; UNIT_B register means:
@@ -303,24 +305,24 @@ doorOpenFull:
         movb #BLOCKED_DOOR_DELAY, UNIT_TIMER_A(r3)
         jmp aiLoop
     DOFB:
-    ; mov #SND_DOOR, r0 ld a, SND_DOOR
-    ; call playSound
-    tstb UNIT_A(r3)
-    bnz DOF2
-      ; horizontal door
-        jsr r5, drawHorizontalDoor
-        .byte 0x58, 0x59, 0x56 ; 88, 89, 86 ; DOORPIECE1, DOORPIECE2, DOORPIECE3
-        .even
-        br DOF3
-    DOF2:
-      ; vertical door
-        jsr r5, drawVerticalDoor
-        .byte 0x46, 0x4A, 0x4E ; 70, 74, 78 ; DOORPIECE1, DOORPIECE2, DOORPIECE3
-        .even
-    DOF3:
-    movb #3, UNIT_B(r3)
-    movb #DOOR_SPEED, UNIT_TIMER_A(r3)
-    jmp ailpCheckForWindowRedraw
+        mov #DOOR, r0
+        call playSound
+        tstb UNIT_A(r3)
+        bnz DOF2
+          ; horizontal door
+            jsr r5, drawHorizontalDoor
+            .byte 0x58, 0x59, 0x56 ; 88, 89, 86 ; DOORPIECE1, DOORPIECE2, DOORPIECE3
+            .even
+            br DOF3
+        DOF2:
+          ; vertical door
+            jsr r5, drawVerticalDoor
+            .byte 0x46, 0x4A, 0x4E ; 70, 74, 78 ; DOORPIECE1, DOORPIECE2, DOORPIECE3
+            .even
+        DOF3:
+            movb #3, UNIT_B(r3)
+            movb #DOOR_SPEED, UNIT_TIMER_A(r3)
+            jmp ailpCheckForWindowRedraw
 
 ; in: r3 = unit number
 doorCloseA:
@@ -392,8 +394,8 @@ doorCloseFull:
                         bnz open_the_door
                         br dcf.exit
         open_the_door:
-            ; mov #SND_DOOR, r0
-            ; call playSound
+            mov #DOOR, r0
+            call playSound
             tstb UNIT_A(r3)
             bnz 10$
               ; horizontal door
@@ -513,8 +515,8 @@ tcOpenState:
 
         incb UNIT_A(r3)
         movb #COMPACTOR_2ND_DELAY, UNIT_TIMER_A(r3)
-        ; mov #SND_TRASH_CLOSE, r0
-        ; call playSound
+        mov #DOOR, r0
+        call playSound
 jmp aiLoop
 
 
@@ -540,8 +542,8 @@ tcMidClosing:
         mov #MSG_TERMINATED, r5
         call printInfo
 
-        ; mov #SND_EXPLOSION, r0 ; EXPLOSION sound
-        ; call playSound
+        mov #EXPLOSION, r0
+        call playSound
         ; mov UNIT_FIND, r0
     pop r4 ; restore unit idx
     clrb UNIT_TYPE(r4)
@@ -588,8 +590,8 @@ tcMidOpening:
     clrb UNIT_A(r3)
     movb #COMPACTOR_COOLDOWN, UNIT_TIMER_A(r3)
 
-    ; mov #SND_TRASH_OPEN, r0
-    ; call playSound
+    mov #DOOR, r0
+    call playSound
     jmp aiLoop
 
 drawTrashCompactor:
@@ -774,8 +776,8 @@ rollerbotFireDetect: ;-------------------------------------------------------{{{
                    .equiv RBAF_Y, .+2
                     movb #0, UNIT_LOC_Y(r2)
 
-                    ; mov #SND_ROBOT_GUN, r0
-                    ; jmp playSound          ;call:return
+                    mov #FIRE_PISTOL, r0
+                    jmp playSound          ;call:return
                 return
                 ;------------------------------------------------------------}}}
 ;----------------------------------------------------------------------------}}}
@@ -864,7 +866,7 @@ pistolAiCommon:
             movb #AI_BOMB, UNIT_TYPE(r3)        ; bomb AI
             movb #TILE_CANNISTER, UNIT_TILE(r3) ; Cannister tile
             movb #5, UNIT_TIMER_A(r3)           ; How long until exposion?
-            clrb UNIT_A(R3)
+            clrb UNIT_A(r3)
             jmp aiLoop
 
         10$:
@@ -885,7 +887,7 @@ pistolAiCommon:
                   ; struck a robot/human
                     movb #AI_SMALL_EXPLOSION, UNIT_TYPE(r3) ; small explosion
                     movb #248, UNIT_TILE(r3)                ; first tile for explosion
-                    mov #1, r4 ; set damage for pistol
+                    mov #1, r0 ; set damage for pistol
                     call inflictDamage
                     call alterAi
                     jmp ailpCheckForWindowRedraw
@@ -897,11 +899,12 @@ jmp aiLoop
 ; if so it will alter it's AI to attack mode.
 ; in: r0 = unit number
 alterAi:
-    cmp r0, #AI_DROID_LEFT_RIGHT  ; hoverbot left/right
+    cmp r4, #AI_DROID_LEFT_RIGHT  ; hoverbot left/right
     beq switch_to_attack_mode
-        cmp r0, #AI_DROID_UP_DOWN ; hoverbot UP/DOWN
+        cmp r4, #AI_DROID_UP_DOWN ; hoverbot UP/DOWN
         beq switch_to_attack_mode
             return
+
     switch_to_attack_mode:
         movb #AI_HOVER_ATTACK, UNIT_TYPE(r3) ; Attack AI
         return
@@ -911,21 +914,21 @@ alterAi:
 ; in: r0 = unit number
 ;     r4 = damage amount
 inflictDamage: ;-------------------------------------------------------------{{{
-    tst r0
+    tst r4
     bze inflict_damage_to_the_player
       ; inflict damage to a unit
-        movb UNIT_HEALTH(r0), r5
-        sub r4, r5
+        movb UNIT_HEALTH(r4), r5
+        sub r0, r5
         blos unit_killed
             ; mov #SND_ROBOT_HIT
             ; jmp playSoundD ; call:return
             return
         unit_killed:
-            clrb UNIT_HEALTH(r0)
-            cmpb UNIT_TYPE(r0), #AI_DEAD_ROBOT ; is it a dead robot already?
+            clrb UNIT_HEALTH(r4)
+            cmpb UNIT_TYPE(r4), #AI_DEAD_ROBOT ; is it a dead robot already?
             beq unit_already_dead
                 movb #DEAD_ROBOT_TIMEOUT, UNIT_TIMER_A
-                movb #TILE_DEAD_ROBOT, UNIT_TILE(r0) ; dead robot tile
+                movb #TILE_DEAD_ROBOT, UNIT_TILE(r4) ; dead robot tile
                 ; mov #SND_ROBOT_DOWN
                 ; jmp playSoundD ; call:return
                 return
@@ -939,12 +942,12 @@ inflictDamage: ;-------------------------------------------------------------{{{
         bnz 10$
             return ; don't hurt killed player
         10$:
-            call createPlayerExplosion
-            call calculateAndRedraw
-            push r4
+            push r0
+                call createPlayerExplosion
+                call calculateAndRedraw
                 call drawMapWindow
                 call drawBuffer
-            pop r4
+            pop r0
 
             tstb UNIT_HEALTH
             bze 20$
@@ -955,10 +958,10 @@ inflictDamage: ;-------------------------------------------------------------{{{
             30$:
                 ; call playSound
 
-                movb UNIT_HEALTH, r0
-                sub r4, r0
+                movb UNIT_HEALTH, r4
+                sub r0, r4
                 blos player_down
-                    movb r0, UNIT_HEALTH
+                    movb r4, UNIT_HEALTH
                     mov #10, BORDER_FLASH
                     jmp displayPlayerHealth ; call:return
                 player_down:
@@ -970,21 +973,21 @@ inflictDamage: ;-------------------------------------------------------------{{{
                     jmp drawBuffer ; call:return
 
     createPlayerExplosion:
-        mov #28, r0
+        mov #28, r4
         10$:
-            tstb UNIT_TYPE(r0)
+            tstb UNIT_TYPE(r4)
             bze 20$
-                inc r0
-                cmp r0, #32 ; max unit for weaponsfire
+                inc r4
+                cmp r4, #32 ; max unit for weaponsfire
         bne 10$
             return
 
         20$:
-            movb #AI_SMALL_EXPLOSION, UNIT_TYPE(r0) ; Small explosion AI type
-            movb #248, UNIT_TILE(r0)                ; first tile for explosion
-            movb #1, UNIT_TIMER_A(r0)
-            movb UNIT_LOC_X, UNIT_LOC_X(r0)
-            movb UNIT_LOC_Y, UNIT_LOC_Y(r0)
+            movb #AI_SMALL_EXPLOSION, UNIT_TYPE(r4) ; Small explosion AI type
+            movb #248, UNIT_TILE(r4)                ; first tile for explosion
+            movb #1, UNIT_TIMER_A(r4)
+            movb UNIT_LOC_X, UNIT_LOC_X(r4)
+            movb UNIT_LOC_Y, UNIT_LOC_Y(r4)
             return
 ;----------------------------------------------------------------------------}}}
 
@@ -1027,10 +1030,11 @@ checkForWindowRedraw:
     mov #TRUE, redraw_window
 1237$: return
 
-; in: r0 = tile
+; in: r0 = tile idx
 ;     r1 = X
 ;     r2 = Y
-; out: r2 = tile map addr
+; out: r2 = calculated map addr
+; corrupts: r2
 plotTileToMap:
     swab r2 ; swab clears the carry flag as a bonus
     ror r2

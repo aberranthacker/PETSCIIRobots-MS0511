@@ -1,6 +1,6 @@
 keyboardIntHadler: ;------------------------------------------------------------
     push r0, r1, r2, @#PBPADR
-        mov  #PPU_KeyboardScanner, @#PBPADR
+        mov  #KEYBOARD_SCANNER / 2, @#PBPADR
         movb @#KBDATA, r0
         bmi handle_keyrelease
 
@@ -53,7 +53,7 @@ KEY_PRESSES_SCANCODES:
      5$: .byte Y_PRESSED     ; fire down
      6$: .byte F_PRESSED     ; fire left
      7$: .byte W_PRESSED     ; fire right
-     8$: .byte 0
+     8$: .byte A_PRESSED     ; search
      9$: .byte J_PRESSED
     10$: .byte U_PRESSED
     11$: .byte 0
@@ -71,7 +71,7 @@ KEY_RELEASES_SCANCODES:
      5$: .byte Y_RELEASED
      6$: .byte F_RELEASED
      7$: .byte W_RELEASED
-     8$: .byte 0
+     8$: .byte A_RELEASED
      9$: .byte J_RELEASED ; cycle weapons
     10$: .byte U_RELEASED ; cycle items
     11$: .byte 0 ; search

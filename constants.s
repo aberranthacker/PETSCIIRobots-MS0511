@@ -8,42 +8,6 @@
 
 .equiv MOVE_WALK,  0b00000001
 .equiv MOVE_HOVER, 0b00000010
-;;    ; Sequence numbers of the keys. Just in case.
-;;KEY_MOVE_UP, 0
-;;KEY_MOVE_DOWN, 1
-;;KEY_MOVE_LEFT, 2
-;;KEY_MOVE_RIGHT, 3
-;;KEY_FIRE_UP, 4
-;;KEY_FIRE_DOWN, 5
-;;KEY_FIRE_LEFT, 6
-;;KEY_FIRE_RIGHT, 7
-;;KEY_CYCLE_WEAPONS, 8
-;;KEY_CYCLE_ITEMS, 9
-;;KEY_USE, 10
-;;KEY_SEARCH, 11
-;;KEY_MOVE, 12
-;;KEY_PAUSE, 13
-;;
-;;    ; Main menu keys strictly defined
-;;    ; Interface 2 + OPQA + Enter + Space
-;;KBD_UP, "7"
-;;KBD_UP_ALT, "Q"
-;;KBD_LEFT, "5"
-;;KBD_RIGHT, "8"
-;;KBD_DOWN, "6"
-;;KBD_DOWN_ALT, "A"
-;;KBD_SPACE, " "
-;;KBD_ENTER, 13
-;;
-;;    ; ZX Spectrum colors (+16 port #fe bitmask)
-;;COLOR_WHITE, 7+16
-;;COLOR_YELLOW, 6+16
-;;COLOR_CYAN, 5+16
-;;COLOR_GREEN, 4+16
-;;COLOR_MAGENTA, 3+16
-;;COLOR_RED, 2+16
-;;COLOR_BLUE, 1+16
-;;COLOR_BLACK, 0+16
 
     ; We've detected some of the hardcode in the
     ; original sources and added constants.

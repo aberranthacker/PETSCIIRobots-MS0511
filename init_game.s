@@ -45,15 +45,15 @@ loadMap:
 setDiffLevel:
    .equiv DIFF_LEVEL, .+2
     mov #1, r0
-    bze setDiffEasy
+    bze set_diff_easy
 
     cmp r0, #2
-    beq setDiffHard
+    beq set_diff_hard
 
   ; normal difficulty - do nothing
 return
 
-setDiffEasy:
+set_diff_easy:
   ; Find all hidden items and double the quantity.
     mov #UNIT_TYPE + 48, r4
     mov #UNIT_A + 48, r5
@@ -70,7 +70,7 @@ setDiffEasy:
     sob r1, 10$
 return
 
-setDiffHard:
+set_diff_hard:
   ; Find all hoverbots and change AI
     mov #UNIT_TYPE, r5
     mov #28, r1

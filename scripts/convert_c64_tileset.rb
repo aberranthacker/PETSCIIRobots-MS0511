@@ -16,28 +16,27 @@ WHITE  = 7
 
 WALL_TOP = GRAY
 WALL = CYAN
-KITCHEN_SINK_TOP = GREEN
 FLOOR_A = GRAY
 FLOOR_B = BLUE
-EARTH = WHITE
-TC_TOP = YELLOW
-BC_TOP = GREEN
 GROUND = WHITE
+TC_TOP = YELLOW # trash compactor
+BC_TOP = GREEN # bar counter
+KS_TOP = GREEN # kitchen sink
 
 colors = Array.new(256, Array.new(9, 7))
 
 # wall: top right corner
 colors[4] = [WALL_TOP, WALL_TOP, WALL_TOP,
-             WALL_TOP, WALL, WALL,
-             WALL_TOP, WALL, WALL]
+             WALL_TOP, WALL,     WALL,
+             WALL_TOP, WALL,     WALL]
 # wall: horizontal
 colors[5] = [WALL_TOP, WALL_TOP, WALL_TOP,
-             WALL, WALL, WALL,
-             WALL, WALL, WALL]
+             WALL,     WALL,     WALL,
+             WALL,     WALL,     WALL]
 # wall: top right corner left
 colors[6] = [WALL_TOP, WALL_TOP, WALL_TOP,
-             WALL, WALL, WALL,
-             WALL, WALL, WALL]
+             WALL,     WALL,     WALL,
+             WALL,     WALL,     WALL]
 # wall: top right corner right
 colors[7] = [WALL_TOP, WALL, FLOOR_A,
              WALL_TOP, WALL, WALL,
@@ -51,7 +50,7 @@ colors[9] = [GRAY, GRAY, GRAY,
              GRAY, GRAY, GRAY,
              GRAY, GRAY, GRAY]
 # wall: top right corner right 2
-colors[10] = [WALL_TOP, WALL, EARTH,
+colors[10] = [WALL_TOP, WALL, GROUND,
               WALL_TOP, WALL, WALL,
               WALL_TOP, WALL, WALL]
 # wall: vertical opened top
@@ -64,8 +63,8 @@ colors[12] = [WALL_TOP, WALL, WALL,
               WALL_TOP, WALL, WALL]
 # wall: bottom left corner bottom
 colors[13] = [WALL_TOP, WALL_TOP, WALL_TOP,
-              WALL, WALL, WALL,
-              WALL, WALL, WALL]
+              WALL,     WALL,     WALL,
+              GROUND,   WALL,     WALL]
 # door: vertical opened bottom
 colors[15] = [WALL_TOP, WALL, FLOOR_A,
               WALL_TOP, WALL, WALL,
@@ -94,6 +93,10 @@ colors[24] = [GREEN, RED,    GREEN,
 colors[27] = [WALL_TOP, WALL, WALL,
               WALL,     WALL, WALL,
               FLOOR_A,  WALL, WALL]
+# chaise lounge
+colors[29] = [YELLOW,  FLOOR_A, FLOOR_A,
+              YELLOW,  YELLOW,  YELLOW,
+              FLOOR_A, FLOOR_A, FLOOR_A]
 # chair: back top
 colors[32] = [CYAN, CYAN,  GRAY,
               GRAY, GREEN, GRAY,
@@ -158,45 +161,45 @@ colors[46] = [GRAY, GRAY, GRAY,
 colors[47] = [GRAY, GRAY, GRAY,
               GRAY, GRAY, GRAY,
               GRAY, GRAY, GRAY]
-# kitchen sink top left
+# kitchen sink: top left
 colors[48] = [WALL_TOP, WALL_TOP, WALL_TOP,
-              WALL_TOP, WALL, WALL,
-              WALL_TOP, WALL, KITCHEN_SINK_TOP]
-# kitchen sink top middle
+              WALL_TOP, WALL,     WALL,
+              WALL_TOP, WALL,     KS_TOP]
+# kitchen sink: top middle
 colors[49] = [WALL_TOP, WALL_TOP, WALL_TOP,
-              WALL, WALL, WALL,
-              KITCHEN_SINK_TOP, KITCHEN_SINK_TOP, KITCHEN_SINK_TOP]
-# kitchen sink top right
+              WALL,     WALL,     WALL,
+              KS_TOP,   KS_TOP,   KS_TOP]
+# kitchen sink: top right
 colors[50] = [WALL_TOP, WALL_TOP, WALL_TOP,
-              WALL, WALL, WALL,
-              KITCHEN_SINK_TOP, WALL, WALL]
+              WALL,     WALL,     WALL,
+              KS_TOP,   WALL,     WALL]
 # desk: bottom
-colors[51] = [GRAY, GRAY, GRAY,
-              GRAY, GRAY, WHITE,
+colors[51] = [GRAY,  GRAY,  GRAY,
+              GRAY,  GRAY,  WHITE,
               WHITE, WHITE, WHITE]
-# kitchen sink middle left
-colors[52] = [WALL_TOP, WALL, KITCHEN_SINK_TOP,
-              WALL_TOP, WALL, KITCHEN_SINK_TOP,
-              WALL_TOP, WALL, KITCHEN_SINK_TOP]
-# kitchen sink middle right
-colors[53] = [KITCHEN_SINK_TOP, KITCHEN_SINK_TOP, KITCHEN_SINK_TOP,
-              KITCHEN_SINK_TOP, WALL, WALL,
-              KITCHEN_SINK_TOP, WALL, WALL]
-# kitchen sink middle middle
-colors[54] = [KITCHEN_SINK_TOP, WALL, FLOOR_B,
-              WALL, WALL, FLOOR_B,
+# kitchen sink: middle left
+colors[52] = [WALL_TOP, WALL, KS_TOP,
+              WALL_TOP, WALL, KS_TOP,
+              WALL_TOP, WALL, KS_TOP]
+# kitchen sink: middle right
+colors[53] = [KS_TOP, KS_TOP, KS_TOP,
+              KS_TOP, WALL,   WALL,
+              KS_TOP, WALL,   WALL]
+# kitchen sink: middle middle
+colors[54] = [KS_TOP,  WALL,    FLOOR_B,
+              WALL,    WALL,    FLOOR_B,
               FLOOR_B, FLOOR_B, FLOOR_B]
 # dining table: top whith bowl
 colors[55] = [WHITE, WHITE, GRAY,
               WHITE, WHITE, FLOOR_A,
               WHITE, WHITE, FLOOR_A]
 # kitchen sink down left
-colors[56] = [WALL_TOP, WALL, KITCHEN_SINK_TOP,
+colors[56] = [WALL_TOP, WALL, KS_TOP,
               WALL_TOP, WALL, WALL,
               WALL_TOP, WALL, WALL]
 # kitchen sink down left
-colors[57] = [KITCHEN_SINK_TOP, WALL, FLOOR_B,
-              WALL, WALL, FLOOR_B,
+colors[57] = [KS_TOP,  WALL,    FLOOR_B,
+              WALL,    WALL,    FLOOR_B,
               FLOOR_B, FLOOR_B, FLOOR_B]
 # stool
 colors[58] = [FLOOR_A, FLOOR_A, FLOOR_A,
@@ -215,8 +218,8 @@ colors[61] = [GREEN, GREEN, GREEN,
               GREEN, GREEN, GREEN,
               GREEN, GREEN, GREEN]
 # pillar
-colors[63] = [CYAN, CYAN, FLOOR_A,
-              CYAN, CYAN, CYAN,
+colors[63] = [CYAN,    CYAN, FLOOR_A,
+              CYAN,    CYAN, CYAN,
               FLOOR_A, CYAN, CYAN]
 # flag
 colors[66] = [CYAN,  CYAN,  CYAN,
@@ -251,9 +254,9 @@ colors[73] = [WALL_TOP, WALL, WALL,
               WALL_TOP, WALL, FLOOR_A,
               WALL_TOP, WALL, WALL]
 # door: vertical half closed middle
-colors[74] = [FLOOR_A, WALL, WALL,
-              FLOOR_A, FLOOR_A, FLOOR_A,
-              WALL_TOP, WALL, FLOOR_A]
+colors[74] = [FLOOR_A,  WALL,    WALL,
+              FLOOR_A,  FLOOR_A, FLOOR_A,
+              WALL_TOP, WALL,    FLOOR_A]
 # heart door: vertical closed top
 colors[75] = [WALL_TOP, WALL, WALL,
               WALL_TOP, WALL, WALL,
@@ -287,9 +290,9 @@ colors[82] = [WALL_TOP, WALL_TOP, WALL_TOP,
               WALL,     WALL,     WALL,
               WALL,     WALL,     WALL]
 # bar counter: top open
-colors[83] = [FLOOR_A, BC_TOP, GRAY,
-              FLOOR_A, BC_TOP, GRAY,
-              FLOOR_A, BC_TOP, GRAY]
+colors[83] = [FLOOR_A, BC_TOP, WALL,
+              FLOOR_A, BC_TOP, WALL,
+              FLOOR_A, BC_TOP, WALL]
 # door: horizontal left half closed
 colors[84] = [WALL_TOP, WALL_TOP, WALL_TOP,
               WALL,     WALL,     WALL,
@@ -303,9 +306,9 @@ colors[86] = [WALL_TOP, WALL_TOP, WALL_TOP,
               WALL,     WALL,     WALL,
               WALL,     WALL,     WALL]
 # bar counter: bottom
-colors[87] = [FLOOR_A, BC_TOP, GRAY,
-              FLOOR_A, BC_TOP, GRAY,
-              FLOOR_A, GRAY,   GRAY]
+colors[87] = [FLOOR_A, BC_TOP, WALL,
+              FLOOR_A, BC_TOP, WALL,
+              FLOOR_A, WALL,   WALL]
 # door: half open horizontal left
 colors[88] = [WALL_TOP, WALL_TOP, WALL,
               WALL,     WALL,     WALL,
@@ -335,9 +338,9 @@ colors[94] = [WALL_TOP, WALL_TOP, WALL_TOP,
               WALL,     WALL,     WALL,
               WALL,     WALL,     WALL]
 # bar counter: middle
-colors[95] = [FLOOR_A, BC_TOP, GRAY,
-              FLOOR_A, BC_TOP, GRAY,
-              FLOOR_A, BC_TOP, GRAY]
+colors[95] = [FLOOR_A, BC_TOP, WALL,
+              FLOOR_A, BC_TOP, WALL,
+              FLOOR_A, BC_TOP, WALL]
 # hoverbot a
 colors[98] = [WHITE, GRAY,  GRAY,
               GRAY,  GREEN, WHITE,
@@ -346,6 +349,34 @@ colors[98] = [WHITE, GRAY,  GRAY,
 colors[99] = [WHITE, GRAY,   GRAY,
               GRAY,  YELLOW, WHITE,
               GRAY,  GRAY,   GRAY]
+# toilet: upper left section
+colors[104] = [WALL_TOP, WALL_TOP, WALL_TOP,
+               WALL,     WALL,     WALL,
+               WALL,     WALL,     WALL]
+# toilet: upper middle section
+colors[105] = [WALL_TOP, WALL_TOP, WALL_TOP,
+               WALL,     WALL,     WALL,
+               WALL,     WALL,     WALL]
+# toilet: upper right section
+colors[106] = [WALL_TOP, WALL_TOP, WALL_TOP,
+               WALL,     WALL,     WALL,
+               WALL,     WALL,     WALL]
+# canister with supports
+colors[107] = [GRAY,  GREEN,   GRAY,
+               GREEN, GREEN,   FLOOR_A,
+               GRAY,  FLOOR_A, GRAY]
+# toilet: lower left section
+colors[108] = [WALL,    WALL,    WALL,
+               FLOOR_A, WALL,    WALL,
+               FLOOR_A, FLOOR_A, WALL]
+# toilet: lower middle section
+colors[109] = [WALL, WALL,    WALL,
+               WALL, WALL,    WALL,
+               WALL, FLOOR_A, WALL]
+# toilet: lower right section
+colors[110] = [WALL, FLOOR_A, FLOOR_A,
+               WALL, FLOOR_A, FLOOR_A,
+               WALL, FLOOR_A, FLOOR_A]
 # cabinet at wall: top left
 colors[112] = [WALL_TOP, WALL_TOP, WALL_TOP,
                WALL,     WALL,     WALL,
@@ -379,9 +410,9 @@ colors[129] = [WALL_TOP, WALL, WALL,
                WALL_TOP, WALL, WALL,
                WALL_TOP, WALL, WALL]
 # explosive canister
-colors[131] = [RED,  CYAN, GRAY,
-               CYAN, CYAN, GRAY,
-               GRAY, GRAY, GRAY]
+colors[131] = [RED,     BLUE,    FLOOR_A,
+               BLUE,    BLUE,    FLOOR_A,
+               FLOOR_A, FLOOR_A, FLOOR_A]
 # pepelats ramp
 colors[137] = [GRAY, GRAY, GRAY,
                GRAY, GRAY, GRAY,
@@ -407,13 +438,13 @@ colors[148] = [RED, YELLOW, RED,
                RED, YELLOW, RED,
                RED, YELLOW, RED]
 # trash compactor: half closed bottom left
-colors[150] = [RED, RED, WALL,
-               RED, RED, RED,
+colors[150] = [RED,    RED,    WALL,
+               RED,    RED,    RED,
                TC_TOP, TC_TOP, TC_TOP]
 # trash compactor: half closed bottom right
 colors[151] = [WALL, WALL, RED,
-               RED, RED, RED,
-               WALL, RED, RED]
+               RED,  RED,  RED,
+               WALL, RED,  RED]
 # trash compactor: closed top left
 colors[152] = [WALL_TOP, WALL_TOP, WALL_TOP,
                WALL,     WALL,     WALL,
@@ -439,7 +470,7 @@ colors[165] = [GREEN, GRAY, WHITE,
                GRAY,  CYAN, BLUE,
                GRAY,  BLUE, BLUE]
 # bathroom drawer: bottom left
-colors[166] = [WALL_TOP, WALL, WALL,
+colors[166] = [WALL_TOP,  WALL, WALL,
                WALL_TOP,  WALL, CYAN,
                WALL_TOP,  WALL, CYAN]
 # bathroom drawer: top right
@@ -447,11 +478,11 @@ colors[167] = [FLOOR_A, FLOOR_A, FLOOR_A,
                WALL,    FLOOR_A, FLOOR_A,
                WALL,    FLOOR_B, FLOOR_A]
 # bathroom drawer: top left
-colors[170] = [WALL_TOP, WALL, CYAN,
+colors[170] = [WALL_TOP,  WALL, CYAN,
                WALL_TOP,  WALL, CYAN,
                WALL_TOP,  WALL, WALL]
 # bathroom drawer: bottom right
-colors[171] = [WALL, FLOOR_B, FLOOR_A,
+colors[171] = [WALL,  FLOOR_B, FLOOR_A,
                WALL,  FLOOR_B, FLOOR_A,
                WALL,  FLOOR_B, FLOOR_A]
 # water
@@ -459,13 +490,13 @@ colors[204] = [BLUE, BLUE, BLUE,
                BLUE, BLUE, BLUE,
                BLUE, BLUE, BLUE]
 # bridge
-colors[205] = [YELLOW, WHITE, WHITE,
-               YELLOW, WHITE, YELLOW,
-               WHITE,  WHITE, YELLOW]
+colors[205] = [GRAY,  WHITE, WHITE,
+               GRAY,  GRAY,  GRAY,
+               WHITE, WHITE, GRAY]
 # pavement a
-colors[206] = [WHITE, WHITE, GRAY,
-               GRAY, WHITE,  WHITE,
-               GRAY, WHITE,  WHITE]
+colors[206] = [WHITE, WHITE,  GRAY,
+               GRAY,  WHITE,  WHITE,
+               GRAY,  WHITE,  WHITE]
 # pavement b
 colors[207] = [WHITE, WHITE, GRAY,
                WHITE, WHITE, WHITE,
@@ -486,6 +517,10 @@ colors[215] = [GREEN, GREEN,  GREEN,
 colors[216] = [WHITE, WHITE, WHITE,
                WHITE, WHITE, GRAY,
                WHITE, GRAY,  WHITE]
+# fence pole: horizontal
+colors[217] = [WHITE,  GROUND, GROUND,
+               GRAY,   WHITE,  GRAY,
+               GROUND, GROUND, GROUND]
 # fence pole: top right corner
 colors[218] = [WHITE, WHITE, WHITE,
                GRAY,  WHITE, WHITE,
@@ -502,10 +537,18 @@ colors[220] = [WHITE,  GRAY,  GROUND,
 colors[221] = [WHITE, BLUE,  BLUE,
                GRAY,  WHITE, GRAY,
                BLUE,  BLUE,  BLUE]
+# fence pole: bottom right corner
+colors[222] = [WHITE,  GRAY,   GROUND,
+               GRAY,   WHITE,  GROUND,
+               GROUND, GROUND, GROUND]
 # tree
 colors[223] = [GREEN, GREEN, GREEN,
                GREEN, RED,   GRAY,
                GREEN, GREEN, RED]
+# fence pole: bottom left corner
+colors[224] = [WHITE,  GRAY,   GROUND,
+               GROUND, WHITE,  GRAY,
+               GROUND, GROUND, GROUND]
 # fence pole: horizontal right
 colors[225] = [WHITE, WHITE, WHITE,
                GRAY,  WHITE, WHITE,

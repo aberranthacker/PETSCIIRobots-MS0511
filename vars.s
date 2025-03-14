@@ -1,4 +1,3 @@
-; TECLADO         ds 14
 CHEATCODE: .ascii "TROUBLEMAKINGS"
            .even
 
@@ -38,8 +37,6 @@ LOADED_MAP:   .word 1
                                        ; CLOCK_ACTIVE    ds 1
 MAP_WINDOW_X: .ds 1 ; Top left location of what is displayed in map window
 MAP_WINDOW_Y: .ds 1 ; Top left location of what is displayed in map window
-CURSOR_X:     .ds 1 ; For on-screen cursor
-CURSOR_Y:     .ds 1 ; For on-screen cursor
 MAP_X: .ds 1 ; Current X location on map
 MAP_Y: .ds 1 ; Current Y location on map
                                        ; ;TEMP_X         ds 1 ; Temporarily used for loops
@@ -47,7 +44,10 @@ MAP_Y: .ds 1 ; Current Y location on map
                                        ; PRECALC_COUNT   ds 1 ; part of screen draw routine
 MOVE_TYPE: .ds 1 ; %00000001=WALK %00000010=HOVER
 TILE: .ds 1      ; The tile number to be plotted
+
 CURSOR_ON:    .ds 1 ; Is cursor active or not? 1=yes 0=no
+CURSOR_X:     .ds 1 ; For on-screen cursor
+CURSOR_Y:     .ds 1 ; For on-screen cursor
                                        ; ;MOVE_RESULT    ds 1 ; 1=Move request success, 0=fail.
 ; UNIT_FIND: .ds 1 ; 255=no unit present.
                                        ; SEARCHBAR       ds 1

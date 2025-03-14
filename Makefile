@@ -27,7 +27,12 @@ INCS = -I./common -I../akg_player
 # --print-map -M
 # --strip-all -s
 
-COMMON = defs.s common/hwdefs.s common/macros.s common/rt11_macros.s common/ppu_macros.s common/keyboard_defs.s
+COMMON = defs.s \
+	 common/hwdefs.s \
+	 common/keyboard_defs.s \
+	 common/macros.s \
+	 common/ppu_macros.s \
+	 common/rt11_macros.s
 
 all : pre-build dsk/robots.dsk
 
@@ -101,12 +106,15 @@ build/ppu_module.bin : build/ppu.o build/main.o
 	ruby $(AOUT2SAV) build/ppu.out -b -s -o build/ppu_module.bin
 build/ppu.o : $(COMMON) \
               ppu.s \
+              opl2_test.s \
               ppu/sltab_init.s \
-              ppu/channel_0_in_int_handler.s \
-              ppu/channel_1_in_int_handler.s \
+              ppu/channel_0_in_isr.s \
+              ppu/channel_1_in_isr.s \
               ppu/errors_handler.s \
-              ppu/vblank_int_handler.s \
-              ppu/keyboard_int_handler.s \
+              ppu/keyboard_isr.s \
+              ppu/set_palette.s \
+              ppu/trap_4_isr.s \
+              ppu/v_blank_isr.s \
               ppu/puts.s \
               audio/ppu_audio.s \
               audio/vars.s \
@@ -114,7 +122,7 @@ build/ppu.o : $(COMMON) \
 	$(AS) ppu.s $(INCS) -al -o build/ppu.o | $(FORMAT_LIST)
 # ppu_module.bin ------------------------------------------------------------}}}
 
-# main.bin -------------------------------------------------------------{{{
+# main.bin ------------------------------------------------------------------{{{
 build/main.bin : build/main.out
 	ruby $(AOUT2SAV) build/main.out -b -s -o build/main.bin
 
@@ -129,12 +137,14 @@ build/main.o : $(COMMON) \
                main.s \
                background_tasks.s \
                constants.s \
+               channel_1_in_isr.s \
                display_weapon.s \
                draw_buffer.s \
                draw_map_window.s \
                init_game.s \
+               objects_interactions.s \
                print_info.s \
-               v_blank_int_handler.s \
+               v_blank_isr.s \
                vars.s \
                common/unzx0.s \
                build/intro_text.zx0 \
@@ -163,7 +173,7 @@ build/scr_text.zx0 : resources/c64/scr_text
 	$(ZX0) -f resources/c64/scr_text build/scr_text.zx0
 build/scr_endgame.zx0 : resources/c64/scr_endgame
 	$(ZX0) -f resources/c64/scr_endgame build/scr_endgame.zx0
-# main.bin -------------------------------------------------------------}}}
+# main.bin ------------------------------------------------------------------}}}
 
 #build/main_symbols.s : build/main.out scripts/main_symbols.rb
 #	ruby scripts/main_symbols.rb

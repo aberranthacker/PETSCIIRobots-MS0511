@@ -158,13 +158,39 @@ start:
             jmp mainGameLoop
     checkKbdFireRight:
         bit #KEYMAP_FIRE_RIGHT, r0
-        bze checkKbdCycleWeapons
+        bze checkKbdSearch
             bic #KEYMAP_FIRE_RIGHT, KEYBOARD_SCANNER
             call fireRight
             jmp mainGameLoop
-    checkKbdCycleWeapons:
-
+    checkKbdSearch:
+        bit #KEYMAP_FIRE_LEFT, r0
+        bze checkKbdCycleWeapons
+            call searchObject
+            ; call CLEAR_KEY_BUFFER
             jmp mainGameLoop
+    checkKbdCycleWeapons:
+                ; inc hl
+                ; cp (hl)
+                ; jr nz, CHECK_KBD_CYCLE_ITEMS
+                ; call CYCLE_WEAPON
+                ; call CLEAR_KEY_BUFFER
+                ; jp MAIN_GAME_LOOP
+    checkKbdCycleItems:
+                ; inc hl
+                ; cp (hl)
+                ; jr nz, CHECK_KBD_USE
+                ; call CYCLE_ITEM
+                ; call CLEAR_KEY_BUFFER
+                ; jp MAIN_GAME_LOOP
+    checkKbdUse:
+                ; inc hl
+                ; cp (hl)
+                ; jr nz, CHECK_KBD_SEARCH
+                ; call USE_ITEM
+                ; call CLEAR_KEY_BUFFER
+                ; jp MAIN_GAME_LOOP
+
+    jmp mainGameLoop
 
 
 petChar: ; 65..90
@@ -675,16 +701,16 @@ DATA_FIRE_LEFT_PLASMA:  .byte 14, 241, 10/2, 1
 DATA_FIRE_RIGHT_PISTOL: .byte 15, 245, 10/2, 0
 DATA_FIRE_RIGHT_PLASMA: .byte 15, 241, 10/2, 1
 
-
-    .include "init_game.s"
     .include "background_tasks.s"
     .include "display_weapon.s"
     .include "draw_buffer.s"
     .include "draw_map_window.s"
+    .include "init_game.s"
+    .include "objects_interactions.s"
     .include "print_info.s"
-    .include "v_blank_int_handler.s"
-    .include "vars.s"
     .include "unzx0.s"
+    .include "v_blank_isr.s"
+    .include "vars.s"
 
 LOAD_MSG2:       .ascii "LOADING: "
 MAP_NAMES_RIGHT: .ascii "01- RESEARCH LAB"

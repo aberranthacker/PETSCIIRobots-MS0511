@@ -29,7 +29,7 @@ Channel1In_IntHandler: ;--------------------------------------------------------
 
             drawChar.draw\@:
                 mov r0, (r2)+
-                mov r0, @#DTSCOL
+                mov r0, @#DOTS_COLOR_REG
                 clrb r0
                 swab r0
                 asl r0
@@ -49,7 +49,7 @@ Channel1In_IntHandler: ;--------------------------------------------------------
         mov #TEXT_BUFFER_PREV, r2
         mov #PBPADR, r5
         mov #FB/2, (r5)
-        mov #DTSOCT, r4
+        mov #DOTS_OCTET_REG, r4
         mov #25, LINES_COUNT
         mov #SCREEN_WIDTH, r3
 

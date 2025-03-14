@@ -171,8 +171,8 @@ SLTABInit:
         BIS #0b110,R1       ;  next record is 4-word, color settings
         MOV R1,(R0)+        ;--pointer to record 64
 
-        ; MOV R0,@#MainScreenFirstRecAddr
-        ; ADD #4,@#MainScreenFirstRecAddr
+        mov R0, MAIN_SCREEN_FIRST_REC
+        add #4, MAIN_SCREEN_FIRST_REC
 ;----------------------------- main screen area
         MOV #FB/2,R2
         MOV #MAIN_SCREEN_LINES_COUNT,R3
