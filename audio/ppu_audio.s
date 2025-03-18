@@ -1,6 +1,6 @@
 .equiv CH_MAX, 9
-.equiv ASM_OPL2, OPL2
-; .equiv ASM_OPL2, STUB_REGISTER
+; .equiv ASM_OPL2, OPL2
+.equiv ASM_OPL2, STUB_REGISTER
 
 ppu_timer_isr:
     mov #PADDR_REG, r5

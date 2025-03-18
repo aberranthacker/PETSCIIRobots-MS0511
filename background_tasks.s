@@ -132,11 +132,11 @@ AI_ROUTINES_LUT:
        .word aiLoop; DUMMY_ROUTINE    ; UNIT_TYPE 01 ; player unit - can't use
        .word leftRightDroid           ; UNIT_TYPE 02
        .word upDownDroid              ; UNIT_TYPE 03
-       .word aiLoop ; hoverAttack     ; UNIT_TYPE 04
+       .word hoverAttack              ; UNIT_TYPE 04
        .word aiLoop ; waterDroid      ; UNIT_TYPE 05
        .word aiLoop ; timeBomb        ; UNIT_TYPE 06
        .word aiLoop ; transporterPad  ; UNIT_TYPE 07
-       .word aiLoop ; deadRobot       ; UNIT_TYPE 08
+       .word deadRobot                ; UNIT_TYPE 08
        .word evilbot                  ; UNIT_TYPE 09
        .word aiDoor                   ; UNIT_TYPE 10
        .word smallExplosion           ; UNIT_TYPE 11
@@ -153,72 +153,11 @@ AI_ROUTINES_LUT:
        .word aiLoop ; waterRaftLr     ; UNIT_TYPE 22
        .word aiLoop ; dematerialize   ; UNIT_TYPE 23
 
+deadRobot:
+    clrb UNIT_TYPE(r3)
+    jmp aiLoop
 
-; In this AI routine, the droid simply goes LEFT until it hits an object,
-; and then reverses direction and does the same, bouncing back and forth.
-; in: r3 = unit number
-leftRightDroid:
-    call hoverbotAnimate
-    movb #HOVERBOT_MOVE_SPD, UNIT_TIMER_A(r3)
-    tstb UNIT_A(r3) ; directrion: 0=LEFT, 1=RIGHT
-    bnz lrd.switch_to_left
-        mov #MOVE_HOVER, MOVE_TYPE
-        call requestWalkLeft
-        bnz lrd.blocked_by_unit
-            mov UNIT, r3
-            movb #1, UNIT_A(r3) ; change direction
-            jmp ailpCheckForWindowRedraw
-
-    lrd.switch_to_left:
-        mov #MOVE_HOVER, MOVE_TYPE
-        call requestWalkRight
-        bnz lrd.blocked_by_unit
-            clrb UNIT_A(r3)     ; change direction
-        lrd.blocked_by_unit:
-            jmp ailpCheckForWindowRedraw
-
-; In this AI routine, the droid simply goes UP until it hits an object,
-; and then reverses direction and does the same, bouncing back and forth.
-; in: r3 = unit number
-upDownDroid:
-    call hoverbotAnimate
-    movb #HOVERBOT_MOVE_SPD, UNIT_TIMER_A(r3)
-    tstb UNIT_A(r3) ; directrion: 0=UP, 1=DOWN
-    bnz UDD01
-
-    mov #MOVE_HOVER, MOVE_TYPE
-    call requestWalkUp
-    bnz udd.blocked_by_unit
-        movb #1, UNIT_A(r3) ; change direction
-        jmp ailpCheckForWindowRedraw
-
-    UDD01:
-    mov #MOVE_HOVER, MOVE_TYPE
-    call requestWalkDown
-    bnz udd.blocked_by_unit
-        clrb UNIT_A(r3)     ; change direction
-
-    udd.blocked_by_unit:
-    jmp ailpCheckForWindowRedraw
-
-; in: r3 = unit number
-hoverbotAnimate:
-    tstb UNIT_TIMER_B(r3)     ; timer reached 0?
-    bze 10$                   ; yes, alter tile
-        decb UNIT_TIMER_B(r3) ; no, decrease the counter
-        return
-
-    10$:
-    movb #HOVERBOT_ANIM_SPEED, UNIT_TIMER_B(r3) ; RESET ANIMATE TIMER
-    cmpb UNIT_TILE(r3), #TILE_HOVERBOT_A
-    bne 20$
-        movb #TILE_HOVERBOT_B, UNIT_TILE(r3)
-        return
-
-    20$:
-    movb #TILE_HOVERBOT_A, UNIT_TILE(r3)
-    return
-
+    .include "background_tasks/hoverbot.s"
     .include "background_tasks/evilbot.s"
 
 ; This routine handles automatic sliding doors.

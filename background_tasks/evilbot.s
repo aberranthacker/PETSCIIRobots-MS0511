@@ -46,6 +46,9 @@ evilbot:
                    call isPlayerInMeleeAttackRange
                  ; zero flag clear - robot next to player, zero flag set - not
                    bze eb.skip_attack
+                       mov #SHOCK, r0
+                       call playSound
+
                        mov #5, r0                 ; amount of damage it will inflict
                        clr r4                     ; unit to inflict damage on.
                        call inflictDamage

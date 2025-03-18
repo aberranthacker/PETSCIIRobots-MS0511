@@ -137,6 +137,7 @@ build/main.o : $(COMMON) \
                main.s \
                background_tasks.s \
                background_tasks/evilbot.s \
+               background_tasks/hoverbot.s \
                constants.s \
                channel_1_in_isr.s \
                display_weapon.s \
