@@ -136,6 +136,7 @@ build/main.out : build/bootsector.o \
 build/main.o : $(COMMON) \
                main.s \
                background_tasks.s \
+               background_tasks/evilbot.s \
                constants.s \
                channel_1_in_isr.s \
                display_weapon.s \

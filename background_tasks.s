@@ -1,3 +1,4 @@
+; NOTES ---------------------------------------------------------------------{{{
 ; NOTES ABOUT UNIT TYPES
 ; ----------------------
 ; 000=no unit (does not exist)
@@ -75,6 +76,8 @@
 ; 16 walk
 ; 17 sfx (short beep)
 ; 18 sfx
+;
+;----------------------------------------------------------------------------}}}
 
 backgroundTasks:
    .equiv redraw_window, .+2
@@ -134,7 +137,7 @@ AI_ROUTINES_LUT:
        .word aiLoop ; timeBomb        ; UNIT_TYPE 06
        .word aiLoop ; transporterPad  ; UNIT_TYPE 07
        .word aiLoop ; deadRobot       ; UNIT_TYPE 08
-       .word aiLoop; evilbot                  ; UNIT_TYPE 09
+       .word evilbot                  ; UNIT_TYPE 09
        .word aiDoor                   ; UNIT_TYPE 10
        .word smallExplosion           ; UNIT_TYPE 11
        .word pistolFireUp             ; UNIT_TYPE 12
@@ -909,10 +912,10 @@ alterAi:
         movb #AI_HOVER_ATTACK, UNIT_TYPE(r3) ; Attack AI
         return
 
-; This routine will inflict damage on whatever is defined in R0 in the amount set in R3.
+; This routine will inflict damage on whatever is defined in R4 in the amount set in R0.
 ; If the damage is more than the health of that unit, it will delete the unit.
-; in: r0 = unit number
-;     r4 = damage amount
+; in: r4 = unit number
+;     r0 = damage amount
 inflictDamage: ;-------------------------------------------------------------{{{
     tst r4
     bze inflict_damage_to_the_player
@@ -1044,3 +1047,31 @@ plotTileToMap:
     movb r0, (r2)
 return
 
+isPlayerInMeleeAttackRange:
+robotAttackRange:
+  ; First check horizontal proximity to player
+    _movb UNIT_LOC_X(r3), r0 ; robot unit
+    _movb UNIT_LOC_X, r1     ; player unit
+    sub r1, r0
+    bpl 10$
+        neg r0 ; convert negative difference to positive
+    10$:
+        cmp r0, #1 ; check if same horizontal tile or next to it
+        blos RAR3
+            sez    ; player out of the attack range
+            return
+        RAR3:
+          ; Now check vertical proximity
+            _movb UNIT_LOC_Y(r3), r0 ; robot unit
+            _movb UNIT_LOC_Y, r1     ; player unit
+            sub r1, r0
+            bpl RAR5
+                neg r0
+            RAR5:
+                cmp r0, #1 ; check if same vertical tile or next to it
+                blos RAR6
+                    sez    ; player out of the attack range
+                    return
+                RAR6:
+                    clz    ; player in melee attacing range
+                    return

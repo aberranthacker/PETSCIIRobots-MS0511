@@ -17,37 +17,37 @@ Channel1In_IntHandler: ;--------------------------------------------------------
         .endr
     sob r1, 10$
 ;-------------------------------------------------------------------------------
-; Render text buffer to the screen
+   ; Render text buffer to the screen
     .macro _drawChar
-            mov (r1)+, r0
-            cmp r0, (r2)
-            bne drawChar.draw\@
-                inc r2
-                inc r2
-                inc (r5)
-                br drawChar.skip\@
+        mov (r1)+, r0
+        cmp r0, (r2)
+        bne drawChar.draw\@
+            inc r2
+            inc r2
+            inc (r5)
+            br drawChar.skip\@
 
-            drawChar.draw\@:
-                mov r0, (r2)+
-                mov r0, @#DOTS_COLOR_REG
-                clrb r0
-                swab r0
-                asl r0
-                mov PET_FONT_LUT(r0), r0
+        drawChar.draw\@:
+            mov r0, (r2)+
+            mov r0, @#DOTS_COLOR_REG
+            clrb r0
+            swab r0
+            asl r0
+            mov PET_FONT_LUT(r0), r0
 
-               .rept 7
-                mov (r0)+, (r4)
-                add r3, (r5)
-               .endr
-                mov (r0), (r4)
-                sub #SCREEN_WIDTH * 7 - 1, (r5)
-            drawChar.skip\@:
+           .rept 7
+            mov (r0)+, (r4)
+            add r3, (r5)
+           .endr
+            mov (r0), (r4)
+            sub #SCREEN_WIDTH * 7 - 1, (r5)
+        drawChar.skip\@:
     .endm
 ;-------------------------------------------------------------------------------
     drawBuffer:
         mov #PPU_TEXT_BUFFER, r1
         mov #TEXT_BUFFER_PREV, r2
-        mov #PBPADR, r5
+        mov #PADDR_REG, r5
         mov #FB/2, (r5)
         mov #DOTS_OCTET_REG, r4
         mov #25, LINES_COUNT
