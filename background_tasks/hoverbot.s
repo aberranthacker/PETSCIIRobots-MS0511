@@ -5,21 +5,20 @@ leftRightDroid:
     call hoverbotAnimate
     movb #HOVERBOT_MOVE_SPD, UNIT_TIMER_A(r3)
     tstb UNIT_A(r3) ; directrion: 0=LEFT, 1=RIGHT
-    bnz lrd.switch_to_left
+    bnz .switch_to_left
         mov #MOVE_HOVER, MOVE_TYPE
         call requestWalkLeft
-        bnz lrd.blocked_by_unit
+        bnz .blocked_by_unit
             mov UNIT, r3
             movb #1, UNIT_A(r3) ; change direction
             jmp ailpCheckForWindowRedraw
-
-    lrd.switch_to_left:
+    .switch_to_left:
         mov #MOVE_HOVER, MOVE_TYPE
         call requestWalkRight
-        bnz lrd.blocked_by_unit
+        bnz .blocked_by_unit
             clrb UNIT_A(r3)     ; change direction
-        lrd.blocked_by_unit:
-            jmp ailpCheckForWindowRedraw
+    .blocked_by_unit:
+        jmp ailpCheckForWindowRedraw
 
 ; In this AI routine, the droid simply goes UP until it hits an object,
 ; and then reverses direction and does the same, bouncing back and forth.
@@ -28,22 +27,20 @@ upDownDroid:
     call hoverbotAnimate
     movb #HOVERBOT_MOVE_SPD, UNIT_TIMER_A(r3)
     tstb UNIT_A(r3) ; directrion: 0=UP, 1=DOWN
-    bnz UDD01
+    bnz .switch_to_down
+        mov #MOVE_HOVER, MOVE_TYPE
+        call requestWalkUp
+        bnz .blocked_by_unit
+            movb #1, UNIT_A(r3) ; change direction
+            jmp ailpCheckForWindowRedraw
+    .switch_to_down:
+        mov #MOVE_HOVER, MOVE_TYPE
+        call requestWalkDown
+        bnz .blocked_by_unit
+            clrb UNIT_A(r3)     ; change direction
 
-    mov #MOVE_HOVER, MOVE_TYPE
-    call requestWalkUp
-    bnz udd.blocked_by_unit
-        movb #1, UNIT_A(r3) ; change direction
+    .blocked_by_unit:
         jmp ailpCheckForWindowRedraw
-
-    UDD01:
-    mov #MOVE_HOVER, MOVE_TYPE
-    call requestWalkDown
-    bnz udd.blocked_by_unit
-        clrb UNIT_A(r3)     ; change direction
-
-    udd.blocked_by_unit:
-    jmp ailpCheckForWindowRedraw
 
 hoverAttack:
     clrb UNIT_TIMER_B(r3)
@@ -54,26 +51,26 @@ hoverAttack:
 
   ; check for horizontal movement
     cmpb UNIT_LOC_X(r3), UNIT_LOC_X
-    beq hb.check_for_vertical_movement
-        blo hb.walk_right
+    beq .check_for_vertical_movement
+        blo .walk_right
             call requestWalkLeft
-            br hb.check_for_vertical_movement
-        hb.walk_right:
+            br .check_for_vertical_movement
+        .walk_right:
             call requestWalkRight
 
-    hb.check_for_vertical_movement:
+    .check_for_vertical_movement:
         cmpb UNIT_LOC_Y(r3), UNIT_LOC_Y
-        beq hb.check_for_attack
-            blo hb.walk_down
+        beq .check_for_attack
+            blo .walk_down
                 call requestWalkUp
-                br hb.check_for_attack
-            hb.walk_down:
+                br .check_for_attack
+            .walk_down:
                 call requestWalkDown
 
-        hb.check_for_attack:
+        .check_for_attack:
             call isPlayerInMeleeAttackRange
           ; zero flag clear - robot next to player, zero flag set - not
-            bze hb.skip_attack
+            bze .skip_attack
                 mov #SHOCK, r0
                 call playSound
 
@@ -83,7 +80,7 @@ hoverAttack:
                 movb #30, UNIT_TIMER_A(r3) ; rate of attack on player.
 
           ; add some code here to create explosion
-            hb.skip_attack:
+            .skip_attack:
                 jmp ailpCheckForWindowRedraw
 
 ; in: r3 = unit number
@@ -103,5 +100,3 @@ hoverbotAnimate:
     20$:
     movb #TILE_HOVERBOT_A, UNIT_TILE(r3)
     return
-
-

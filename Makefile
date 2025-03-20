@@ -137,25 +137,25 @@ build/main.o : $(COMMON) \
                main.s \
                background_tasks.s \
                background_tasks/evilbot.s \
-               background_tasks/hoverbot.s \
-               constants.s \
+               background_tasks/hoverbot_processed.s \
+               build/c64tileset.gfx \
+               build/color_scr_text.zx0 \
+               build/color_tileset.uknc \
+               build/intro_text.zx0 \
+               build/scr_endgame.zx0 \
+               build/scr_text.zx0 \
                channel_1_in_isr.s \
+               common/unzx0.s \
+               constants.s \
                display_weapon.s \
                draw_buffer.s \
                draw_map_window.s \
                init_game.s \
                objects_interactions.s \
                print_info.s \
-               v_blank_isr.s \
-               vars.s \
-               common/unzx0.s \
-               build/intro_text.zx0 \
-               build/scr_text.zx0 \
-               build/color_scr_text.zx0 \
-               build/scr_endgame.zx0 \
-               build/c64tileset.gfx \
                resources/c64/tileset.c64 \
-               build/color_tileset.uknc
+               v_blank_isr.s \
+               vars.s
 	$(AS) main.s $(INCS) -al -o build/main.o | $(FORMAT_LIST)
 
 build/c64tileset.gfx : resources/c64/c64tileset.png scripts/png_font_to_gfx.rb
@@ -218,3 +218,9 @@ build/petfont.gfx : scripts/import_petfont_gfx.rb
 # build/unzx0.o : $(COMMON) common/unzx0.s
 # 	$(AS) common/unzx0.s $(INCS) -o build/unzx0.o
 # common --------------------------------------------------------------------}}}
+
+%_processed.s : %.s tools/pp
+	tools/pp $< >$@
+
+tools/pp : tools/pp.go
+	go build -C tools pp.go
