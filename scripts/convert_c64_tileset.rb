@@ -373,6 +373,22 @@ colors[108] = [WALL,    WALL,    WALL,
 colors[109] = [WALL, WALL,    WALL,
                WALL, WALL,    WALL,
                WALL, FLOOR_A, WALL]
+# evilbot
+colors[100] = [RED, RED,  RED,
+               RED, RED,  GRAY,
+               RED, GRAY, GRAY]
+# evilbot
+colors[101] = [RED, RED,  RED,
+               RED, RED,  GRAY,
+               RED, GRAY, GRAY]
+# evilbot
+colors[102] = [RED, RED,  RED,
+               RED, RED,  GRAY,
+               RED, GRAY, GRAY]
+# evilbot
+colors[103] = [RED, RED,  RED,
+               RED, RED,  GRAY,
+               RED, GRAY, GRAY]
 # toilet: lower right section
 colors[110] = [WALL, FLOOR_A, FLOOR_A,
                WALL, FLOOR_A, FLOOR_A,
