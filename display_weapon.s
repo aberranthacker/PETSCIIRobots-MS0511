@@ -106,13 +106,11 @@ displayIcon:
         mov #0x2000, r0
         .rept 6
             mov r0, (r5)+
-            mov r0, (r5)+
-            mov r0, (r5)+
         .endr
     .else
         mov #0x2020, r0
-        mov r0, (r5)+
-        mov r0, (r5)+
-        mov r0, (r5)+
+        .rept 3
+            mov r0, (r5)+
+        .endr
     .endif
 return
