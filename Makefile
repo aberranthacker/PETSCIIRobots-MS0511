@@ -139,6 +139,7 @@ build/main.o : $(COMMON) \
                background_tasks.s \
                background_tasks/evilbot.s \
                background_tasks/hoverbot_processed.s \
+               background_tasks/water_droid.s \
                build/c64tileset.gfx \
                build/color_scr_text.zx0 \
                build/color_tileset.uknc \

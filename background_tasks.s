@@ -133,7 +133,7 @@ AI_ROUTINES_LUT:
        .word leftRightDroid           ; UNIT_TYPE 02
        .word upDownDroid              ; UNIT_TYPE 03
        .word hoverAttack              ; UNIT_TYPE 04
-       .word aiLoop ; waterDroid      ; UNIT_TYPE 05
+       .word waterDroid               ; UNIT_TYPE 05
        .word aiLoop ; timeBomb        ; UNIT_TYPE 06
        .word aiLoop ; transporterPad  ; UNIT_TYPE 07
        .word deadRobot                ; UNIT_TYPE 08
