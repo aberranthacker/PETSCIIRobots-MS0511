@@ -1,19 +1,12 @@
-vblankIntHandler: ;-------------------------------------------------------------
+vBlankISR: ;-------------------------------------------------------------
     push @#PBPADR, r5, r4, r3, r2, r1, r0
 
     .ifdef DEBUG
        ;CALL @#PrintDebugInfo
     .endif
 
-        mtps #PR7
-       .equiv MusicPlayerAddr, .+2
-        call @#subroutineStub
-        mtps #PR0
-
        .equiv cursor_counter, .+2
         inc #-1
-
-jmp vih.finalize
 
         mov cursor_counter, r1
         bit #1, r1
@@ -101,7 +94,7 @@ jmp vih.finalize
     vih.finalize:
         pop r0, r1, r2, r3, r4, r5, @#PBPADR
 
-    vblankIntHandler.minimal:
+    vBlankISR.minimal:
       ; small piece of firware code to stop floppy disk drive
         tst @#07130 ; is floppy disk drive timer active?
         bze 1271$   ; no, do nothing

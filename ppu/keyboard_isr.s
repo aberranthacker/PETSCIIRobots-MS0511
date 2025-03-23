@@ -1,4 +1,4 @@
-keyboardIntHadler: ;------------------------------------------------------------
+keyboardISR: ;------------------------------------------------------------
     push r0, r1, r2, @#PBPADR
         mov  #KEYBOARD_SCANNER / 2, @#PBPADR
         movb @#KBDATA, r0

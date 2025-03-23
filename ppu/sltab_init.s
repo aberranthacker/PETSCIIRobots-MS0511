@@ -42,10 +42,10 @@ bit 1: size of the next record
 
 bit 2: 1) for 2-word records - bit 2 of address of the next element of the table
        2) for 4-word records - selects register to which data will be loaded:
-          0 - cursor, pallete, and horizontal scale control register
+          0 - cursor, palette, and horizontal scale control register
           1 - colors control register
 --------------------------------------------------------------------------------
-cursor, pallete and horizontal scale control registers desription: -------------
+cursor, palette and horizontal scale control registers desription: -------------
 
 1st word
 +----+----+----+----+----+----+----+----+----+----+----+----+---+---+---+---+
@@ -165,7 +165,7 @@ SLTABInit:
         SUB  #2,@#SetPalette.MainScreenLinesTable
 
         MOV #0b10000,(R0)+  ;--cursor settings: graphical cursor
-        MOV #0b10111,(R0)+  ;  320 dots per line, pallete 7
+        MOV #0b10111,(R0)+  ;  320 dots per line, palette 7
         MOV R2,(R0)+        ;--address of a screenline
         ADD #8,R1           ;  calc address of next record of SLTAB
         BIS #0b110,R1       ;  next record is 4-word, color settings

@@ -91,12 +91,12 @@ hoverbotAnimate:
         return
 
     10$:
-    movb #HOVERBOT_ANIM_SPEED, UNIT_TIMER_B(r3) ; RESET ANIMATE TIMER
-    cmpb UNIT_TILE(r3), #TILE_HOVERBOT_A
-    bne 20$
-        movb #TILE_HOVERBOT_B, UNIT_TILE(r3)
-        return
+        movb #HOVERBOT_ANIM_SPEED, UNIT_TIMER_B(r3) ; RESET ANIMATE TIMER
+        cmpb UNIT_TILE(r3), #TILE_HOVERBOT_A
+        bne 20$
+            movb #TILE_HOVERBOT_B, UNIT_TILE(r3)
+            return
 
-    20$:
-    movb #TILE_HOVERBOT_A, UNIT_TILE(r3)
-    return
+        20$:
+            movb #TILE_HOVERBOT_A, UNIT_TILE(r3)
+            return

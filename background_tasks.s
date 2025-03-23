@@ -157,8 +157,9 @@ deadRobot:
     clrb UNIT_TYPE(r3)
     jmp aiLoop
 
-    .include "background_tasks/hoverbot.s"
     .include "background_tasks/evilbot.s"
+    .include "background_tasks/hoverbot_processed.s"
+    .include "background_tasks/water_droid.s"
 
 ; This routine handles automatic sliding doors.
 ; UNIT_B register means:
@@ -802,7 +803,7 @@ pistolAiCommon:
         movb UNIT_LOC_Y(r3), r2
         call getTileFromMap
         cmpb r0, #TILE_CANNISTER ; explosive cannister
-        bne 10$ ; uses A further
+        bne .not_explosive_canister ; uses A further
           ; hit an explosive cannister
             movb #TILE_BLOWN_CANNISTER, (r5)    ; Blown cannister
             movb #AI_BOMB, UNIT_TYPE(r3)        ; bomb AI
@@ -811,7 +812,7 @@ pistolAiCommon:
             clrb UNIT_A(r3)
             jmp aiLoop
 
-        10$:
+        .not_explosive_canister:
             bitb TILE_ATTRIB(r0), #0b00010000 ; can see through tile?
             bnz bullet_passable_tile
                ;mov #SND_WALL_HIT, r0
@@ -822,7 +823,7 @@ pistolAiCommon:
                 jmp ailpCheckForWindowRedraw
             bullet_passable_tile:
               ; check if it encountered a robot/human
-                call checkForUnit
+                call checkForUnit ; returns unit ID in r4, or -1 if unit wasn't encountered
                 bpl hit_unit
                     jmp ailpCheckForWindowRedraw ; no unit encountered
                 hit_unit:
@@ -839,7 +840,7 @@ jmp aiLoop
 
 ; This routine checks to see if the robot being shot is a hoverbot,
 ; if so it will alter it's AI to attack mode.
-; in: r0 = unit number
+; in: r4 = hit unit ID
 alterAi:
     cmp r4, #AI_DROID_LEFT_RIGHT  ; hoverbot left/right
     beq switch_to_attack_mode
@@ -853,7 +854,7 @@ alterAi:
 
 ; This routine will inflict damage on whatever is defined in R4 in the amount set in R0.
 ; If the damage is more than the health of that unit, it will delete the unit.
-; in: r4 = unit number
+; in: r4 = hit unit ID
 ;     r0 = damage amount
 inflictDamage: ;-------------------------------------------------------------{{{
     tst r4

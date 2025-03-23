@@ -16,31 +16,31 @@
     ; Original values designed for 60 Hz machine
 ; -----------------------------------------
     ; 3x3 constants
-.equiv HOVERBOT_MOVE_SPD,       8 ; original value is 10
-.equiv HOVERBOT_ATTACK_SPD,     6 ; original value is 7
-.equiv HOVERBOT_ANIM_SPEED,     2 ; original value is 3
-.equiv DOOR_SPEED,              4 ; original value is 5
-.equiv ROLLERBOT_MOVE_SPD,      6 ; original value is 7
-.equiv ROLLERBOT_ANIM_SPEED,    2 ; original value is 3
-.equiv MAGNET_EFFECT_DURATION, 48 ; original value is 60
-.equiv TIMER_BOMB,             80 ; original value is 100
-.equiv DEAD_ROBOT_TIMEOUT,    204 ; original value is 255
-.equiv SEARCH_PERIOD_DELAY,    15 ; original value is 18
-.equiv KBD_DELAY,              15 ; original value is 20
 .equiv BLOCKED_DOOR_DELAY,     28 ; original value is 35
-.equiv CLOSED_DOOR_DELAY,      16 ; original value is 20
 .equiv BLOCKED_ELEVATOR_DELAY, 28 ; original value is 35
+.equiv BOMB_ANIM_DELAY,         9 ; original value is 12
+.equiv CHAIN_EXPLODE_DELAY,     8 ; original value is 10
+.equiv CLOSED_DOOR_DELAY,      16 ; original value is 20
 .equiv CLOSED_ELEVATOR_DELAY,  16 ; original value is 20
-.equiv RAFT_SPEED,              5 ; original value is 6
-.equiv RAFT_WAIT_TIME,         80 ; original value is 100
-.equiv OPENED_DOOR_DELAY,      30 ; original value is 30
-.equiv EVILBOT_ANIM_SPD,        4 ; original value is 5
 .equiv COMPACTOR_1ST_DELAY,    16 ; original value is 20
 .equiv COMPACTOR_2ND_DELAY,     8 ; original value is 10
 .equiv COMPACTOR_3RD_DELAY,    40 ; original value is 50
 .equiv COMPACTOR_COOLDOWN,      8 ; original value is 10
-.equiv BOMB_ANIM_DELAY,         9 ; original value is 12
-.equiv CHAIN_EXPLODE_DELAY,     8 ; original value is 10
+.equiv DEAD_ROBOT_TIMEOUT,    204 ; original value is 255
+.equiv DOOR_SPEED,              4 ; original value is 5
+.equiv EVILBOT_ANIM_SPD,        4 ; original value is 5
+.equiv HOVERBOT_ANIM_SPEED,     2 ; original value is 3
+.equiv HOVERBOT_ATTACK_SPD,     6 ; original value is 7
+.equiv HOVERBOT_MOVE_SPD,       8 ; original value is 10
+.equiv KBD_DELAY,              15 ; original value is 20
+.equiv MAGNET_EFFECT_DURATION, 48 ; original value is 60
+.equiv OPENED_DOOR_DELAY,      30 ; original value is 30
+.equiv RAFT_SPEED,              5 ; original value is 6
+.equiv RAFT_WAIT_TIME,         80 ; original value is 100
+.equiv ROLLERBOT_ANIM_SPEED,    2 ; original value is 3
+.equiv ROLLERBOT_MOVE_SPD,      6 ; original value is 7
+.equiv SEARCH_PERIOD_DELAY,    15 ; original value is 18
+.equiv TIMER_BOMB,             80 ; original value is 100
 
     ; AI id
 .equiv AI_DROID_LEFT_RIGHT, 2
@@ -184,33 +184,33 @@
 ;           X+Y*SCREEN_WIDTH
 ; -----------------------------------------------------------------------------
 
-.equiv OFFS_MAINMENU_CONTROLS, 1+5*SCREEN_WIDTH
-.equiv OFFS_MAINMENU_EYEBROW_LEFT,  15+5*SCREEN_WIDTH
-.equiv OFFS_MAINMENU_EYEBROW_RIGHT, 19+5*SCREEN_WIDTH
-.equiv OFFS_MAINMENU_MAPNUMBER, 7+8*SCREEN_WIDTH
-.equiv OFFS_MAINMENU_MAPNAME,   0+9*SCREEN_WIDTH
-.equiv OFFS_REDEFINE_CONTROLS, 17+7*SCREEN_WIDTH
-.equiv OFFS_REDEFINE_DONE, 5+22*SCREEN_WIDTH
-.equiv OFFS_DISPLAY_WEAPON, 34+1*SCREEN_WIDTH ; 26+1
+.equiv OFFS_BUILD_STR, 26
 .equiv OFFS_DISPLAY_ITEM, 26+8*SCREEN_WIDTH
-.equiv OFFS_DISPLAY_KEYS, 34+15*SCREEN_WIDTH  ; 26+15
 .equiv OFFS_DISPLAY_KEY1, OFFS_DISPLAY_KEYS
 .equiv OFFS_DISPLAY_KEY2, OFFS_DISPLAY_KEY1+2
 .equiv OFFS_DISPLAY_KEY3, OFFS_DISPLAY_KEY2+2
-.equiv OFFS_PLAYER_HEALTH, 34+23*SCREEN_WIDTH ; 26+22
+.equiv OFFS_DISPLAY_KEYS, 34+15*SCREEN_WIDTH  ; 26+15
 .equiv OFFS_DISPLAY_OUCH, 27+18*SCREEN_WIDTH
+.equiv OFFS_DISPLAY_WEAPON, 34+1*SCREEN_WIDTH ; 26+1
+.equiv OFFS_ELEVATOR_BUTTONS, 6+(23*SCREEN_WIDTH)
 .equiv OFFS_GAMEOVER_STR1, 8+9*SCREEN_WIDTH
 .equiv OFFS_GAMEOVER_STR2, 8+10*SCREEN_WIDTH
 .equiv OFFS_GAMEOVER_STR3, 8+11*SCREEN_WIDTH
+.equiv OFFS_MAINMENU_CONTROLS, 1+5*SCREEN_WIDTH
+.equiv OFFS_MAINMENU_EYEBROW_LEFT,  15+5*SCREEN_WIDTH
+.equiv OFFS_MAINMENU_EYEBROW_RIGHT, 19+5*SCREEN_WIDTH
+.equiv OFFS_MAINMENU_MAPNAME,   0+9*SCREEN_WIDTH
+.equiv OFFS_MAINMENU_MAPNUMBER, 7+8*SCREEN_WIDTH
+.equiv OFFS_PLAYER_HEALTH, 34+23*SCREEN_WIDTH ; 26+22
 .equiv OFFS_PRINT_INFO, 0+24*SCREEN_WIDTH ; 0+23
+.equiv OFFS_REDEFINE_CONTROLS, 17+7*SCREEN_WIDTH
+.equiv OFFS_REDEFINE_DONE, 5+22*SCREEN_WIDTH
+.equiv OFFS_RESULTS_DIFFICULTY, 24+15*SCREEN_WIDTH
 .equiv OFFS_RESULTS_MAPNAME, 17+7*SCREEN_WIDTH
-.equiv OFFS_RESULTS_TIME,    21+9*SCREEN_WIDTH
 .equiv OFFS_RESULTS_ROBOTS,  27+11*SCREEN_WIDTH
 .equiv OFFS_RESULTS_SECRETS, 27+13*SCREEN_WIDTH
-.equiv OFFS_RESULTS_DIFFICULTY, 24+15*SCREEN_WIDTH
-.equiv OFFS_ELEVATOR_BUTTONS, 6+(23*SCREEN_WIDTH)
+.equiv OFFS_RESULTS_TIME,    21+9*SCREEN_WIDTH
 .equiv OFFS_WINLOSE_MSG, 12+3*SCREEN_WIDTH
-.equiv OFFS_BUILD_STR, 26
 
 .equiv VIEWPORT_TILE_WDT, 11 ; Viewport width in 3x3 tiles
 .equiv VIEWPORT_TILE_HGT,  7 ; Viewport height in 3x3 tiles

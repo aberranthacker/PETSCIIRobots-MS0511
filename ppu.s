@@ -54,41 +54,40 @@ start:
         .include "ppu/sltab_init.s"
         mov #0x001, @#PASWCR
 ;-------------------------------------------------------------------------------
-        MOV #SLTAB, @#0272 ; use our SLTAB
+        mov #SLTAB, @#0272 ; use our SLTAB
 
         call Puts
 
-        MOV #vblankIntHandler, @#0100
+        mov #vBlankISR, @#0100
+        ; mov #PR0, @#0102 ; PR7 by default
 
-        MOV #keyboardIntHadler,@#KBINT
-      ; Установим адрес таблицы раскладки клавиатуры на таблицу режима ГРАФ
-      ; Хак, переводящий раскладку в эмуляторе UKNCBTL c qwerty на jcuken
+        mov #keyboardISR, @#KBINT
+      ; Set the address of the keyboard layout table to the GRAPH (ГРАФ) mode table
+      ; A hack that changes the keyboard layout in the UKNCBTL emulator from QWERTY to JCUKEN
         mov #07774, @#07214
 
-        MOV #PCH0II, R0
-        MOV #Channel0In_IntHandler, (R0)+
-        MOV #0200, (R0)
-      ; read from the channel, just in case
-        TST @#PCH0ID
+        mov #PCH0_IN_INT, r0
+        mov #channel0InISR, (r0)+
+        ; mov #PR0, (r0)                 ; PR7 by default
+        tstb @#PCH0_IN_DATA            ; read from the channel, just in case
 
-        MOV #PCH1II, R0
-        MOV #Channel1In_IntHandler, (R0)+
-        MOV #0200, (R0)
-        BIS #Ch1StateInInt, @#PCHSIS ; enable channel 1 input interrupt
-      ; read from the channel, just in case
-        TST @#PCH1ID
+        mov #PCH1_IN_INT, r0
+        mov #channel1InISR, (r0)+
+        mov #PR0, (r0)                 ; PR7 by default
+        bisb #CH1_IN_INT_BIT, @#PCHSIS ; enable channel 1 input interrupt
+        tstb @#PCH1_IN_DATA            ; read from the channel, just in case
 
     .ifdef DETECT_ABERRANT_SOUND_MODULE
-        .equiv ScanRangeWords, 3
-        mov #PSG0+ScanRangeWords * 2, r1
+       .equiv scan_range_words, 3
+        mov #PSG0 + scan_range_words * 2, r1
         push @#4
             mov #Trap4, @#4
           ; Aberrant Sound Module uses addresses range 0177360-0177377
           ; 16 addresses in total
-            mov #ScanRangeWords, r0
-            TestNextSoundBoardAddress:
+            mov #scan_range_words, r0
+            test_next_address:
                 tst -(r1)
-            sob r0, TestNextSoundBoardAddress
+            sob r0, test_next_address
           ; R1 now contains 0177360, address of PSG0
             mov #PSG1, r2
 
@@ -183,7 +182,7 @@ clearScreen: ;---------------------------------------------------------------{{{
     .ifdef INCLUDE_AKG_PLAYER ;----------------------------------------------{{{
     .endif ;-----------------------------------------------------------------}}}
 loadDiskFile: ; -------------------------------------------------------------{{{
-        mov #vblankIntHandler.minimal, @#0100
+        mov #vBlankISR.minimal, @#0100
       ; in: r0 = address of params struct in CPU memory
         clc
         ror r0 ; prepare the address to be loaded into address register 0177010
@@ -196,14 +195,14 @@ loadDiskFile: ; -------------------------------------------------------------{{{
             tstb @#023334 ; check operation status code (params struct copy)
         bmi wait_while_loading
 
-        mov #vblankIntHandler, @#0100
+        mov #vBlankISR, @#0100
         call setupTimerISR
 1237$:  return
 ;----------------------------------------------------------------------------}}}
 setupTimerISR: ; ------------------------------------------------------------{{{
     clr @#TIMER_STATE_REG
     mov #timerISR, @#TMRINT
-  ; 12-bits value to load into timer counter
+  ; 12-bit value to load into timer counter
   ; 1 / (3434 * 4e-6) = 72.80139778683751 Hz
     mov #3434, @#TIMER_BUFFER_REG
   ; bit 6: enables timer interrupt
@@ -214,16 +213,14 @@ setupTimerISR: ; ------------------------------------------------------------{{{
     return
 
 timerISR:
-    mtps #PR7
     tst @#TIMER_CURRENT_VALUE_REG ; reading the register restarts the timer
                                   ; counter if it has reached 0
-    bnz .-4                       ; read second time to ensure the timer counter
-                                  ; is properly restarted
+    ; bnz .-4                       ; retry if timer didn't restart
                                   ; (some timers are a bit slow)
+    tst @#TIMER_CURRENT_VALUE_REG ; reading the register restarts the timer
     push @#PADDR_REG, r0, r1, r2, r3, r4, r5
         call ppu_timer_isr
     pop r5, r4, r3, r2, r1, r0, @#PADDR_REG
-    mtps #PR0
     rti
 ;----------------------------------------------------------------------------}}}
 ; 16-bit LFSR Random Number Generator (Optimized)
@@ -233,7 +230,7 @@ timerISR:
 ; Caller must initialize R1 with 0xB400 once
 
 next_random:
-    .equiv nrseed, .+2
+   .equiv nrseed, .+2
     mov #0xACE1, r0
     clc            ; Clear carry for logical shift (fill high bit with 0)
     ror r0         ; Shift R0 right: LSB → Carry, high bit ← 0

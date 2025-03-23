@@ -1,4 +1,4 @@
-Channel0In_IntHandler: ;--------------------------------------------------------
+channel0InISR: ;--------------------------------------------------------
         PUSH @#PBPADR, R5
 
         MOV  @#CommandsQueue_CurrentPosition, R5

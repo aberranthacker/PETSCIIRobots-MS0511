@@ -185,31 +185,3 @@ ssy_opl2_write: ;-----------------------------------------------------------{{{
 return ;----------------------------------------------------------------------}}}
 
 .include "audio/vars.s"
-
-readByte:
-    mov PTR(r2), r0
-    tst r1
-    bnz hi_mem_data
-        clc
-        ror r0
-        mov r0, @#PADDR_REG
-        bcs 10$
-            clr r0
-            bisb @#PBP1_DATA_REG, r0
-            return
-        10$:
-            clr r0
-            bisb @#PBP2_DATA_REG, r0
-            return
-    hi_mem_data:
-        sec
-        ror r0
-        mov r0, @#PADDR_REG
-        bcs 10$
-            clr r0
-            bisb @#PBP1_DATA_REG, r0
-            return
-        10$:
-            clr r0
-            bisb @#PBP2_DATA_REG, r0
-            return

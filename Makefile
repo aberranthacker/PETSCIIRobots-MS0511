@@ -117,6 +117,7 @@ build/ppu.o : $(COMMON) \
               ppu/v_blank_isr.s \
               ppu/puts.s \
               audio/ppu_audio.s \
+              audio/ssy_opl2_init.s \
               audio/vars.s \
 	      build/c64tileset.gfx
 	$(AS) ppu.s $(INCS) -al -o build/ppu.o | $(FORMAT_LIST)
@@ -224,3 +225,4 @@ build/petfont.gfx : scripts/import_petfont_gfx.rb
 
 tools/pp : tools/pp.go
 	go build -C tools pp.go
+	strip tools/pp

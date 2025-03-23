@@ -36,7 +36,6 @@ SYSRQ:
             mov r0, sound_played
             call ssy_sound_play
         40$:
-
     pop r1, r0
 rti
 

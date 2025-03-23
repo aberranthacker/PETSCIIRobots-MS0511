@@ -37,11 +37,19 @@
        .=MAIN_START
 
 start:
+    mov #(0600-0216)/2, r1
+    mov #0216, r0
+    10$:
+        clr (r0)+
+    sob r1, 10$
+
     _unZX0 INTRO_TEXT, TEXT_BUFFER
     call drawBuffer
 
     call ssy_init
-    mov #Channel1InIsr, @#CCH1_IN_INT
+    mov #CCH1_IN_INT, r0
+    mov #channel1InISR, (r0)+
+    mov #PR7, (r0)
     mov #0x40, @#CCH1_IN_STATE
     tst @#CCH1_IN_DATA
   ; Main game loop starts here
@@ -163,7 +171,7 @@ start:
             call fireRight
             jmp mainGameLoop
     checkKbdSearch:
-        bit #KEYMAP_FIRE_LEFT, r0
+        bit #KEYMAP_SEARCH, r0
         bze checkKbdCycleWeapons
             call searchObject
             ; call CLEAR_KEY_BUFFER
@@ -328,21 +336,21 @@ displayDecimalNumber: ; TODO: replace with optimized one
     clr r0       ; r0: MSW, r1: LSW
     div #100, r0 ; quotient -> r0, remainder -> r1
     add r2, r0
-    .ifdef COLOR_TILES
+   .ifdef COLOR_TILES
         movb #7, (r5)+
-    .endif
+   .endif
     movb r0, (r5)+
     clr r0
     div #10, r0
     add r2, r0
-    .ifdef COLOR_TILES
+   .ifdef COLOR_TILES
         movb #7, (r5)+
-    .endif
+   .endif
     movb r0, (r5)+
     add r2, r1
-    .ifdef COLOR_TILES
+   .ifdef COLOR_TILES
         movb #7, (r5)+
-    .endif
+   .endif
     movb r1, (r5)+
 return
 
