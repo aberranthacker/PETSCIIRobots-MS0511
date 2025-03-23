@@ -135,8 +135,8 @@ SLTABInit:
 ;------------------------------------- top region, header
    .if AUX_SCREEN_LINES_COUNT != 0
         MOV R0, @#SetPalette.TopAreaColors
-        MOV #0xBA90,(R0)+   ; colors  011  010  001  000 (YRGB)
-        MOV #0xFEDC,(R0)+   ; colors  111  110  101  100 (YRGB)
+        MOV #0xCA90,(R0)+   ; colors  011  010  001  000 (YRGB)
+        MOV #0xFD7E,(R0)+   ; colors  111  110  101  100 (YRGB)
         CLR (R0)+           ;--address of line 19
         BIC #0b110,R1       ;  next record is 2-word
         ADD #8,R1           ;  calculate pointer to next record
@@ -172,7 +172,6 @@ SLTABInit:
         MOV R1,(R0)+        ;--pointer to record 64
 
         mov R0, MAIN_SCREEN_FIRST_REC
-        add #4, MAIN_SCREEN_FIRST_REC
 ;----------------------------- main screen area
         MOV #FB/2,R2
         MOV #MAIN_SCREEN_LINES_COUNT,R3
