@@ -2,6 +2,10 @@
     .equiv OPL2_CHANNELS_VARS_SIZE, OPL2_CHANNELS_VARS_END - OPL2_CHANNELS_VARS
     .equiv OPL2_CHANNELS_VARS_SIZEW, OPL2_CHANNELS_VARS_SIZE / 2
 
+    .equiv OPL2_VARS_TO_COPY_SIZE, OPL2_CHANNELS_VARS_END - OPL2_VARS_TO_COPY ; 128 bytes
+    .equiv OPL2_VARS_TO_COPY_SIZEW, OPL2_VARS_TO_COPY_SIZE / 2
+    .equiv OPL2_VARS_TO_COPY_SIZEDW, OPL2_VARS_TO_COPY_SIZE / 4
+
     .equiv OPL2_CHANNELS_PREV_VARS_SIZE, OPL2_CHANNELS_PREV_VARS_END - OPL2_CHANNELS_PREV_VARS
     .equiv OPL2_CHANNELS_PREV_VARS_SIZEW, OPL2_CHANNELS_PREV_VARS_SIZE / 2
 .else
@@ -9,29 +13,31 @@
     .equiv OPL2_CHANNELS_VARS_SIZEW, OPL2_CHANNELS_VARS_SIZE / 2
 .endif
 
+    .equiv INSTRUMENT_REGS_PER_CHANNEL, 10
+
 ; arrays of pointers to a byte in the sound data
 OPL2_CHANNELS_VARS:
+
+    WAIT:    .ds.b CH_MAX ;
+   .even
     RET:     .ds.w CH_MAX ; Return pointer from a block reference
     PTR:     .ds.w CH_MAX ; Current pointer
     LOOP:    .ds.w CH_MAX ; Loop pointer
     REFPREV: .ds.w CH_MAX ; Previous reference pointer
 
-    PITCH: .ds.w CH_MAX ; Pitch for tandy and adlib
-
-    WAIT:    .ds.b CH_MAX ;
-    VOLOPL:  .ds.b CH_MAX ; OPL2 specific volume (more bits and extra data)
-    KEYOFF:  .ds.b CH_MAX ; OPL2 keyoff flag
-    .even
-
-   .equiv INSTRUMENT_REGS_PER_CHANNEL, 10
+OPL2_VARS_TO_COPY:
+    KEYOFF:   .ds.b CH_MAX ; OPL2 keyoff flag
+    VOLOPL:   .ds.b CH_MAX ; OPL2 specific volume (more bits and extra data)
     OPL_REGS: .ds.b CH_MAX * INSTRUMENT_REGS_PER_CHANNEL
+    PITCH:    .ds.w CH_MAX   ; Pitch for tandy and adlib
+    .ds.w 1 ; just to make size of the section divisable by 4 (128 bytes)
 OPL2_CHANNELS_VARS_END:
 
 OPL2_CHANNELS_PREV_VARS:
-    PITCH_PREV: .ds.w CH_MAX ; Pitch for speaker, previous pitch for OPL2
     VOLPREV:    .ds.b CH_MAX ; Previous volume value to track down the changes
-    .even
-    OPL_PREV:   .ds.b CH_MAX * INSTRUMENT_REGS_PER_CHANNEL
+   .even
+    OPL_PREV:   .ds.b CH_MAX * INSTRUMENT_REGS_PER_CHANNEL ; 90
+    PITCH_PREV: .ds.w CH_MAX ; Pitch for speaker, previous pitch for OPL2
 OPL2_CHANNELS_PREV_VARS_END:
 
 SSY_OPL2_OPERATOR_ORDER:

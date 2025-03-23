@@ -199,7 +199,7 @@ ssy_music_play:
 ; sound system update
 ; call it from timer ISR, at 72.8 HZ rate (8253 divider 16384, 1193180/16384=72.8)
 ssy_timer_isr:
-       .equiv SOUND_ENABLED, .+2
+       .equiv SOUND_ENABLED, .+2 ; ssy_init sets this flag
         tstb #0
         bnz process_channels
         return
@@ -417,7 +417,7 @@ ssy_timer_isr:
         add #INSTRUMENT_REGS_PER_CHANNEL, r3
        .equiv SSY_CHANNELS, .+2 ; Number of active data streams
         cmpb r1, #1
-        bhis opl2_update
+        beq opl2_update
         jmp process_channel
 
     opl2_update:
@@ -436,6 +436,34 @@ ssy_timer_isr:
         bnz 1237$
 
 1237$:  return ; ssy_timer_isr
+
+readByte:
+    mov PTR(r2), r0
+    tst r1
+    bnz hi_mem_data
+        clc
+        ror r0
+        mov r0, @#PADDR_REG
+        bcs 10$
+            clr r0
+            bisb @#PBP1_DATA_REG, r0
+            return
+        10$:
+            clr r0
+            bisb @#PBP2_DATA_REG, r0
+            return
+    hi_mem_data:
+        sec
+        ror r0
+        mov r0, @#PADDR_REG
+        bcs 10$
+            clr r0
+            bisb @#PBP1_DATA_REG, r0
+            return
+        10$:
+            clr r0
+            bisb @#PBP2_DATA_REG, r0
+            return
 
     .include "audio/vars.s"
 

@@ -31,8 +31,8 @@
        .global DIFFICULTY
        .global unZX0
 
-       .equiv MAIN_OPL2_CHANNELS_VARS, OPL2_CHANNELS_VARS
-       .global MAIN_OPL2_CHANNELS_VARS
+       .equiv MAIN_OPL2_VARS_TO_COPY, OPL2_VARS_TO_COPY
+       .global MAIN_OPL2_VARS_TO_COPY
 
        .=MAIN_START
 
@@ -52,6 +52,7 @@ start:
     mov #PR7, (r0)
     mov #0x40, @#CCH1_IN_STATE
     tst @#CCH1_IN_DATA
+
   ; Main game loop starts here
     mov #SYSRQ, @#0100
     mtps #PR0
@@ -688,13 +689,13 @@ afterFire:
     mov r3, UNIT
     cmp SELECTED_WEAPON, #ID_PLASMA_GUN
     beq af.plasma_selected
-          ; mov #SND_PISTOL, r0
-          ; call playSound
+            mov #FIRE_PISTOL, r0
+            call playSound
             dec AMMO_PISTOL
             jmp displayWeapon
     af.plasma_selected:
-          ; mov #SND_PLASMAGUN, r0
-          ; call playSound
+            mov #FIRE_PLASMA, r0
+            call playSound
             dec AMMO_PLASMA
             jmp displayWeapon
 

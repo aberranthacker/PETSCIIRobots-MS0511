@@ -77,30 +77,16 @@ start:
         bisb #CH1_IN_INT_BIT, @#PCHSIS ; enable channel 1 input interrupt
         tstb @#PCH1_IN_DATA            ; read from the channel, just in case
 
-    .ifdef DETECT_ABERRANT_SOUND_MODULE
-       .equiv scan_range_words, 3
-        mov #PSG0 + scan_range_words * 2, r1
-        push @#4
-            mov #Trap4, @#4
-          ; Aberrant Sound Module uses addresses range 0177360-0177377
-          ; 16 addresses in total
-            mov #scan_range_words, r0
-            test_next_address:
-                tst -(r1)
-            sob r0, test_next_address
-          ; R1 now contains 0177360, address of PSG0
-            mov #PSG1, r2
+        mov #Trap4, @#4
+        tst @#OPL2
+        tst @#Trap4Detected
+        bnz opl2_absent
+            mov #OPL2, r0
+            mov r0, OPL2_REGA
+            mov r0, OPL2_REGB
+            mov r0, OPL2_REGC
+        opl2_absent:
 
-            tst @#Trap4Detected
-            bze aberrant_sound_module_present
-                mov #STUB_REGISTER, r1
-                mov r1, r2
-            aberrant_sound_module_present:
-                clr @#Trap4Detected
-                .ifdef INCLUDE_AKG_PLAYER
-                .endif
-        pop @#4
-    .endif
         mov #trap4Handler,  @#04
         mov #trap10Handler, @#010
         mov #trap24Handler, @#024
@@ -182,21 +168,26 @@ clearScreen: ;---------------------------------------------------------------{{{
     .ifdef INCLUDE_AKG_PLAYER ;----------------------------------------------{{{
     .endif ;-----------------------------------------------------------------}}}
 loadDiskFile: ; -------------------------------------------------------------{{{
-        mov #vBlankISR.minimal, @#0100
-      ; in: r0 = address of params struct in CPU memory
-        clc
-        ror r0 ; prepare the address to be loaded into address register 0177010
-        mov r0, @#023200 ; store params struct address for firmware subroutine
-      ; firmware subroutine that handles floppy drive
-      ; (it calls programmable timer subroutine which uses value at 07050)
-        call @#0131176
+    mov #vBlankISR.minimal, @#0100
+  ; in: r0 = address of params struct in CPU memory
+    clc
+    ror r0 ; prepare the address to be loaded into address register 0177010
+    mov r0, @#023200 ; store params struct address for firmware subroutine
+  ; firmware subroutine that handles floppy drive
+  ; (it calls programmable timer subroutine which uses value at 07050)
+    call @#0131176
 
-        wait_while_loading:
-            tstb @#023334 ; check operation status code (params struct copy)
-        bmi wait_while_loading
-
+    wait_while_loading:
+        tstb @#023334 ; check operation status code (params struct copy)
+    bmi wait_while_loading
+    bze 10$
+        ; call handleLoadingError
+        br .
+        br .
+        br .
+    10$:
         mov #vBlankISR, @#0100
-        call setupTimerISR
+        ; call setupTimerISR
 1237$:  return
 ;----------------------------------------------------------------------------}}}
 setupTimerISR: ; ------------------------------------------------------------{{{
@@ -217,7 +208,8 @@ timerISR:
                                   ; counter if it has reached 0
     ; bnz .-4                       ; retry if timer didn't restart
                                   ; (some timers are a bit slow)
-    tst @#TIMER_CURRENT_VALUE_REG ; reading the register restarts the timer
+    tst @#TIMER_CURRENT_VALUE_REG
+    tst @#TIMER_CURRENT_VALUE_REG
     push @#PADDR_REG, r0, r1, r2, r3, r4, r5
         call ppu_timer_isr
     pop r5, r4, r3, r2, r1, r0, @#PADDR_REG
@@ -253,7 +245,7 @@ RandomWord:
         add #39, r0
     10$:
     mov r0, rseed1 ; store the new seed value back to rseed1
-    .equiv rseed2, .+2
+   .equiv rseed2, .+2
     add #0x9820, r0; add the secondary seed value to R0
     mov r0, rseed2 ; store the result back to rseed2
     return

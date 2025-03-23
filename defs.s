@@ -11,6 +11,7 @@
 ;.equiv PREVENT_SIGN_EXTENSION, 1
 .equiv COLOR_TILES, 1
 .equiv SPLIT_OPL2_PLAYER, 1
+; .equiv INPLACE_OPL2_WRITE, 1
 ;===============================================================================
 .equiv PPU.loadDiskFile,      0*2
 .equiv PPU.SetPalette,        1*2
@@ -184,4 +185,5 @@
 .equiv KEYMAP_FIRE_DOWN,  0x0020
 .equiv KEYMAP_FIRE_LEFT,  0x0040
 .equiv KEYMAP_FIRE_RIGHT, 0x0080
+.equiv KEYMAP_SEARCH,     0x0100
 

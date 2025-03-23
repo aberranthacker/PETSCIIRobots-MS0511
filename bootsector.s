@@ -6,6 +6,7 @@
                 .include "defs.s"
 
                 .global loadDiskFile
+                .global initialLoader
                 .global PS.Status
                 .global PS.Command
                 .global PS.DeviceType
@@ -45,7 +46,7 @@ ParamsStruct:
         .=052   ;
 52$:    .word -1; 42: PPUCommandArg
 54$:    .word 0 ; 44: KeyboardScanner
-56$:    .word 0 ; 46:
+56$:    .word 0 ; 46: OPL2_PROCS_TO_EXECUTE
 60$:    .word 0 ; 48: TTY (channel 0) out int vector
 62$:    .word 0 ; 50:
 64$:    .word 0 ; 52: TTY (channel 0) in int vector
@@ -54,7 +55,7 @@ ParamsStruct:
         .=076   ; 62
 76$:    br initialLoader
 100$:   .word INTERRUPT_HANDLER_STUB ; Vblank int vector
-102$:   .word 0200
+102$:   .word PR0
 ;-------------------------------------------------------------------------------
         .=0104  ; 68
       ; in: r0 - params struct address
@@ -90,6 +91,7 @@ loadDiskFile:
 ; The code below will be used only once to load, install, and execute PPU module,
 ; as well as to load and execute loader.
 ; It can be overridden safely after that.
+        .=0216
 initialLoader: ; 0216 140 0x8E
       ; r0 - contains a drive number
       ; r1 - contains CSR

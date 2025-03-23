@@ -4,6 +4,8 @@ vBlankISR: ;-------------------------------------------------------------
     .ifdef DEBUG
        ;CALL @#PrintDebugInfo
     .endif
+        call ppu_timer_isr
+        jmp  vih.skip
 
        .equiv cursor_counter, .+2
         inc #-1
